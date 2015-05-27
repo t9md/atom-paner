@@ -1,0 +1,11 @@
+# I don't want to set default keymap.
+# This is my principle for every my Atom Packages and Vim plugins I've created till now.
+
+
+'atom-text-editor.vim-mode.command-mode':
+  'cmd-x':     'paner:swap'
+  'cmd-enter': 'paner:maximize'
+  'cmd-K':     'paner:very-top'
+  'cmd-J':     'paner:very-bottom'
+  'cmd-H':     'paner:very-left'
+  'cmd-L':     'paner:very-right'

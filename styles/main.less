@@ -1,0 +1,16 @@
+atom-workspace.paner-maximize {
+  .tab-bar {
+    display: none;
+  }
+  atom-pane-container {
+    position: relative;
+    atom-pane.active {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+  }
+}
