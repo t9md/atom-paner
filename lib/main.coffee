@@ -1,10 +1,10 @@
 {CompositeDisposable} = require 'atom'
 _ = require 'underscore-plus'
 
-PaneAxis = null
-Pane     = null
-
 module.exports =
+  PaneAxis: null
+  Pane:     null
+
   activate: (state) ->
     @disposables = new CompositeDisposable
 
@@ -26,9 +26,6 @@ module.exports =
   getPanes: ->
     atom.workspace.getPanes()
 
-  getActivePaneAxis: (pane) ->
-    @getActivePane().parent()
-
   getActivePane: ->
     atom.workspace.getActivePane()
 
@@ -37,28 +34,34 @@ module.exports =
     item:  pane.getActiveItem()
     index: pane.getActiveItemIndex()
 
+  getOrientation: (direction) ->
+    if direction in ['top', 'bottom']
+      'vertical'
+    else
+      'horizontal'
+
   very: (direction) ->
+    # [FIXME]
+    # Occasionally blank pane, remain on original pane position.
+    # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
+    # This issue is already reported to
+    #  https://github.com/atom/atom/issues/4643
     return if @getPanes().length is 1
-    activePane      = @getActivePane()
-    activeItemIndex = activePane.getActiveItemIndex()
-    container       = activePane.getContainer()
-    rootOrg         = container.getRoot()
-    Pane            = activePane.constructor
-    PaneAxis        = rootOrg.constructor
+    activePane       = @getActivePane()
+    activeItemIndex  = activePane.getActiveItemIndex()
+    container        = activePane.getContainer()
+    rootOrg          = container.getRoot()
+    @Pane           ?= activePane.constructor
+    @PaneAxis       ?= rootOrg.constructor
+    orientation      = @getOrientation direction
 
-    orientation =
-      if direction in ['top', 'bottom']
-        'vertical'
-      else
-        'horizontal'
-
-    newPane = new Pane()
+    newPane = new @Pane()
     newPane.setContainer container
 
     if rootOrg.getOrientation() is orientation
       root = rootOrg
     else
-      root = new PaneAxis({container, orientation, children: [rootOrg]})
+      root = new @PaneAxis({container, orientation, children: [rootOrg]})
 
     switch direction
       when 'top', 'left'
@@ -69,10 +72,15 @@ module.exports =
     for item, i in activePane.getItems()
       activePane.moveItemToPane item, newPane, i
 
-    activePane?.close()
-
     if root isnt rootOrg
       container.setRoot(root)
+
+    activePane.destroy()
+    # activePane.close()
+    # console.log "alive? #{activePane.isAlive()}"
+    # console.log "destroyed? #{activePane.isDestroyed()}"
+    # found = container.getPanes().indexOf activePane
+    # console.log "found? #{found}"
 
     newPane.activateItemAtIndex activeItemIndex
     newPane.activate()
@@ -112,12 +120,6 @@ module.exports =
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
     # moveItemToPane
-
-  getNextPane: ->
-    panes        = @getPanes()
-    currentIndex = panes.indexOf @getActivePane()
-    nextIndex    = (currentIndex + 1) % panes.length
-    panes[nextIndex]
 
   deactivate: ->
     @disposables.dispose()

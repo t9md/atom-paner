@@ -1,4 +1,4 @@
-# paner package
+# paner
 
 Missing pane manipulation helper collection.
 
