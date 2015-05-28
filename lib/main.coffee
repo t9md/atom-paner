@@ -9,12 +9,13 @@ module.exports =
     @disposables = new CompositeDisposable
 
     @disposables.add atom.commands.add 'atom-workspace',
-      'paner:swap':   => @swap('next')
-      'paner:very-bottom': => @very('bottom')
       'paner:maximize':    => @maximize()
+      'paner:swap-item':   => @swapItem()
       'paner:very-top':    => @very('top')
+      'paner:very-bottom': => @very('bottom')
       'paner:very-left':   => @very('left')
       'paner:very-right':  => @very('right')
+      'paner:test':        => @test()
 
   maximize: ->
     workspaceElement = atom.views.getView(atom.workspace)
@@ -30,60 +31,19 @@ module.exports =
     atom.workspace.getActivePane()
 
   getPaneInfo: (pane) ->
-    pane:  pane
-    item:  pane.getActiveItem()
-    index: pane.getActiveItemIndex()
+    pane:      pane
+    item:      pane.getActiveItem()
+    index:     pane.getActiveItemIndex()
+    container: pane.getContainer()
+    root:      pane.getContainer().getRoot()
+    root:      pane.getContainer().getRoot()
+    parent:    pane.getParent()
 
   getOrientation: (direction) ->
     if direction in ['top', 'bottom']
       'vertical'
     else
       'horizontal'
-
-  very: (direction) ->
-    # [FIXME]
-    # Occasionally blank pane, remain on original pane position.
-    # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
-    # This issue is already reported to
-    #  https://github.com/atom/atom/issues/4643
-    return if @getPanes().length is 1
-    activePane       = @getActivePane()
-    activeItemIndex  = activePane.getActiveItemIndex()
-    container        = activePane.getContainer()
-    rootOrg          = container.getRoot()
-    @Pane           ?= activePane.constructor
-    @PaneAxis       ?= rootOrg.constructor
-    orientation      = @getOrientation direction
-
-    newPane = new @Pane()
-    newPane.setContainer container
-
-    if rootOrg.getOrientation() is orientation
-      root = rootOrg
-    else
-      root = new @PaneAxis({container, orientation, children: [rootOrg]})
-
-    switch direction
-      when 'top', 'left'
-        root.addChild(newPane, 0)
-      when 'right', 'bottom'
-        root.addChild(newPane)
-
-    for item, i in activePane.getItems()
-      activePane.moveItemToPane item, newPane, i
-
-    if root isnt rootOrg
-      container.setRoot(root)
-
-    activePane.destroy()
-    # activePane.close()
-    # console.log "alive? #{activePane.isAlive()}"
-    # console.log "destroyed? #{activePane.isDestroyed()}"
-    # found = container.getPanes().indexOf activePane
-    # console.log "found? #{found}"
-
-    newPane.activateItemAtIndex activeItemIndex
-    newPane.activate()
 
   getAdjacentPane: ->
     # Like Vim's `ctrl-w x`, select pane within current PaneAxis.
@@ -101,15 +61,13 @@ module.exports =
       .last()
       .value()
 
-  swap: (direction) ->
+  swapItem: ->
+    return unless adjacentPane = @getAdjacentPane()
     src = @getPaneInfo @getActivePane()
-
-    adjacentPane = @getAdjacentPane()
-    return unless adjacentPane
     dst = @getPaneInfo adjacentPane
 
-    configDestroyEmptyPanes = atom.config.get('core.destroyEmptyPanes')
     # Temporarily disable to avoid pane itself destroyed.
+    configDestroyEmptyPanes = atom.config.get('core.destroyEmptyPanes')
     atom.config.set('core.destroyEmptyPanes', false)
 
     src.pane.moveItemToPane src.item, dst.pane, dst.index
@@ -119,7 +77,63 @@ module.exports =
 
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
-    # moveItemToPane
 
   deactivate: ->
     @disposables.dispose()
+
+  movePane: (srcPane, dstPane) ->
+    for item, i in srcPane.getItems()
+      srcPane.moveItemToPane item, dstPane, i
+    srcPane.destroy()
+
+  reparentChildren: ->
+
+  # [FIXME]
+  # Occasionally blank pane, remain on original pane position.
+  # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
+  # This issue is already reported to
+  #  https://github.com/atom/atom/issues/4643
+  very: (direction) ->
+    return if @getPanes().length is 1
+    thisPane = @getActivePane()
+    paneInfo   = @getPaneInfo thisPane
+    {parent, index, root, container} = paneInfo
+    orientation = @getOrientation direction
+
+    @Pane     ?= thisPane.constructor
+    @PaneAxis ?= root.constructor
+
+    # newPane = new @Pane()
+    # newPane.setContainer container
+
+    if root.getOrientation() isnt orientation
+      root = new @PaneAxis({container, orientation, children: [root]})
+
+    parent.removeChild thisPane
+
+    switch direction
+      when 'top', 'left'
+        # root.addChild(newPane, 0)
+        root.addChild(thisPane, 0)
+      when 'right', 'bottom'
+        # root.addChild(newPane)
+        root.addChild(thisPane)
+
+    # reparent
+    if paneInfo.root.getOrientation() isnt orientation
+      for child in root.children when (child instanceof @PaneAxis) and (child.getOrientation() is orientation)
+        children   = child.getChildren()
+        firstChild = children.shift()
+        firstChild.setFlexScale()
+        root.replaceChild(child, firstChild)
+        while children.length
+          root.insertChildAfter(firstChild, children.pop())
+        child.destroy()
+
+    parent.adjustFlexScale()
+    paneInfo.root.adjustFlexScale()
+    root.adjustFlexScale()
+    container.replaceChild(paneInfo.root, root) if root isnt paneInfo.root
+
+    activePane.activateItemAtIndex index
+    activePane.activate()

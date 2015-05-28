@@ -3,7 +3,7 @@
 
 
 'atom-text-editor.vim-mode.command-mode':
-  'cmd-x':     'paner:swap'
+  'cmd-x':     'paner:swap-item'
   'cmd-enter': 'paner:maximize'
   'cmd-K':     'paner:very-top'
   'cmd-J':     'paner:very-bottom'
