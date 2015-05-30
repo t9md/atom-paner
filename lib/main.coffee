@@ -99,7 +99,7 @@ module.exports =
     @Pane      ?= thisPane.constructor
     @PaneAxis  ?= root.constructor
 
-    parent.removeChild(thisPane, true)
+    # parent.removeChild(thisPane, true)
     if root.getOrientation() isnt orientation
       @debug "Different orientation"
       root = new @PaneAxis({container, orientation, children: [@copyRoot(root)]})
@@ -114,7 +114,7 @@ module.exports =
 
     container.setRoot(root) if root isnt paneInfo.root
     container.destroyEmptyPanes()
-    # @reparentPaneAxis(axis) for axis in @getAllAxis(root)
+    @reparentPaneAxis(axis) for axis in @getAllAxis(root)
     newPane.activateItemAtIndex index
     newPane.activate()
 
@@ -168,6 +168,9 @@ module.exports =
     return list
 
   copyPaneAxis: (paneAxis) ->
+    # unsubscribe before copy
+    paneAxis.unsubscribeFromChild(child) for child in paneAxis.getChildren()
+
     {container, orientation} = paneAxis
     new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
 
@@ -175,9 +178,6 @@ module.exports =
     newRoot = @copyPaneAxis(root)
     root.destroy()
     for paneAxis in @getAllAxis(newRoot)
-      # unsubscribe before copy
-      paneAxis.unsubscribeFromChild(child) for child in paneAxis.getChildren()
-
       newPaneAxis = @copyPaneAxis paneAxis
       paneAxis.parent.replaceChild paneAxis, newPaneAxis
       paneAxis.destroy()
