@@ -36,7 +36,6 @@ module.exports =
     index:     pane.getActiveItemIndex()
     container: pane.getContainer()
     root:      pane.getContainer().getRoot()
-    root:      pane.getContainer().getRoot()
     parent:    pane.getParent()
 
   getOrientation: (direction) ->
@@ -45,12 +44,11 @@ module.exports =
     else
       'horizontal'
 
+  # Like Vim's `ctrl-w x`, select pane within current PaneAxis.
+  #
+  # * Choose next Pane if exists.
+  # * If next Pane doesn't exits, choose previous Pane.
   getAdjacentPane: ->
-    # Like Vim's `ctrl-w x`, select pane within current PaneAxis.
-    #
-    # * Choose next Pane if exists.
-    # * If next Pane doesn't exits, choose previous Pane.
-
     activePane = @getActivePane()
     parent     = activePane.getParent()
     children   = parent.getChildren()
@@ -86,7 +84,16 @@ module.exports =
       srcPane.moveItemToPane item, dstPane, i
     srcPane.destroy()
 
-  reparentChildren: ->
+  copyPaneAxis: (paneAxis) ->
+    {container, orientation} = paneAxis
+    new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
+
+    # clone = atom.deserializers.deserialize(paneAxis.serialize())
+    # container = paneAxis.getContainer()
+    # clone.setContainer(container)
+    # clone.children.forEach (child) ->
+    #   child.setContainer(container)
+    #   child.setParent(clone)
 
   # [FIXME]
   # Occasionally blank pane, remain on original pane position.
@@ -96,44 +103,64 @@ module.exports =
   very: (direction) ->
     return if @getPanes().length is 1
     thisPane = @getActivePane()
-    paneInfo   = @getPaneInfo thisPane
+    paneInfo = @getPaneInfo thisPane
     {parent, index, root, container} = paneInfo
     orientation = @getOrientation direction
-
-    @Pane     ?= thisPane.constructor
-    @PaneAxis ?= root.constructor
-
-    # newPane = new @Pane()
-    # newPane.setContainer container
+    @Pane      ?= thisPane.constructor
+    @PaneAxis  ?= root.constructor
 
     if root.getOrientation() isnt orientation
-      root = new @PaneAxis({container, orientation, children: [root]})
+      console.log "Different orientation"
+      # root.unsubscribeFromChild(child)
+      origRoot = new @PaneAxis({
+        container,
+        orientation: root.getOrientation(),
+        children: root.getChildren()
+        })
 
-    parent.removeChild thisPane
+      for child in root.getChildren()
+        root.removeChild(child)
+      root.destroy()
+      root  = new @PaneAxis({container, orientation, children: [origRoot]})
 
+    newPane = new @Pane()
     switch direction
       when 'top', 'left'
-        # root.addChild(newPane, 0)
-        root.addChild(thisPane, 0)
+        root.addChild(newPane, 0)
       when 'right', 'bottom'
-        # root.addChild(newPane)
-        root.addChild(thisPane)
+        root.addChild(newPane)
+    @movePane thisPane, newPane
 
-    # reparent
-    if paneInfo.root.getOrientation() isnt orientation
-      for child in root.children when (child instanceof @PaneAxis) and (child.getOrientation() is orientation)
-        children   = child.getChildren()
-        firstChild = children.shift()
-        firstChild.setFlexScale()
-        root.replaceChild(child, firstChild)
-        while children.length
-          root.insertChildAfter(firstChild, children.pop())
-        child.destroy()
+    if root isnt paneInfo.root
+      container.setRoot(root)
+      @reparentChildren root, orientation
 
-    parent.adjustFlexScale()
-    paneInfo.root.adjustFlexScale()
-    root.adjustFlexScale()
-    container.replaceChild(paneInfo.root, root) if root isnt paneInfo.root
+    container.destroyEmptyPanes()
+    newPane.activateItemAtIndex index
+    newPane.activate()
 
-    activePane.activateItemAtIndex index
-    activePane.activate()
+  isEqualOrientationAxis: (axis, orientation) ->
+    (axis instanceof @PaneAxis) and (axis.getOrientation() is orientation)
+
+  reparentChildren: (parent, orientation) ->
+    console.log "Reparent"
+    for axis in parent.children when @isEqualOrientationAxis(axis, orientation)
+      console.log "Reparent: found"
+      children   = axis.getChildren()
+      firstChild = children.shift()
+      firstChild.setFlexScale()
+      parent.replaceChild(axis, firstChild)
+      while children.length
+        parent.insertChildAfter(firstChild, children.shift())
+      axis.destroy()
+
+  # reparent
+  # if paneInfo.root.getOrientation() isnt orientation
+  #   for child in root.children when (child instanceof @PaneAxis) and (child.getOrientation() is orientation)
+  #     console.log "reParent!!"
+  #     children  = child.getChildren()
+  #     child.reparentLastChild()
+  #     children.shift()
+  #     while children.length
+  #       root.addChild(children.shift())
+  #     child.destroy()
