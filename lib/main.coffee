@@ -5,6 +5,10 @@ Config =
   debug:
     type: 'boolean'
     default: false
+  mergeSameOrientaion:
+    type: 'boolean'
+    default: true
+    description: "When moving very far, merge child PaneAxis to Parent if orientaion is same"
 
 module.exports =
   config: Config
@@ -35,14 +39,12 @@ module.exports =
     state = atom.config.get('paner.debug') and "enabled" or "disabled"
     console.log "paner: debug #{state}"
 
-  # Like Vim's `ctrl-w x`, select pane within current PaneAxis.
-  #
-  # * Choose next Pane if exists.
-  # * If next Pane doesn't exits, choose previous Pane.
+  # Get nearest pane within current PaneAxis.
+  #  * Choose next Pane if exists.
+  #  * If next Pane doesn't exits, choose previous Pane.
   getAdjacentPane: ->
     activePane = @getActivePane()
-    parent     = activePane.getParent()
-    children   = parent.getChildren()
+    children   = activePane.getParent().getChildren()
     index      = children.indexOf(activePane)
 
     _.chain([children[index-1], children[index+1]])
@@ -67,29 +69,25 @@ module.exports =
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
 
+  # This code is result of try&error to get desirble result.
+  #  * I couldn't understand why @copyRoot is necessary, but without copying PaneAxis,
+  #    it seem to PaneAxis detatched from View element and not reflect model change.
+  #  * Simply changing order of children by splicing children of PaneAxis or similar
+  #    kind of direct manupilation to Pane or PaneAxis won't work, it easily bypassing
+  #    event callback and produce bunch of Exception.
+  #  * I wanted to use `thisPane` instead of `new Pane() and @movePane`, but I gave up to
+  #    solve lot of Exception caused by removeChild(thisPane). So I took @movePane() approarch.
+  #  * So as conclusion, code is far from ideal, I took dirty try&erro approarch,
+  #    need to be improved in future. There must be better way.
+  #
   # [FIXME]
   # Occasionally blank pane remain on original pane position.
   # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
   # This issue is already reported to https://github.com/atom/atom/issues/4643
   #
-  # [NOTE]
-  # This code is result of try&error to get desirble result.
-  #  * I don't understand why @copyRoot is necessary, but without copying PaneAxis,
-  #    it seem to detatch View element and not worked as expected.
-  #  * Simply changing order of children by splicing children of PaneAxis or same
-  #    kind of direct manupilation to Pane or PaneAxis won't work, it easily bypassing
-  #    event system and you got buch of Exception.
-  #  * I wanted to use `thisPane` instead of `new Pane() and @movePane`, but I gave up to
-  #    solve lot of Exception caused by removeChild(thisPane). So I took @movePane() approarch.
-  #
-  # I know current implementation is not ideal and not clean.
-  # There must be better way.
-  # But for now I took 'try&erro&pick code that worked' approarch.
-  #
   # [TODO]
   # Understand Pane, PaneAxis, PaneContainer and its corresponding ViewElement and surrounding
-  # Event callback.
-  # Improve this function without using @copyRoot?
+  # Event callbacks. Ideally it should be done without @copyRoot()?
   very: (direction) ->
     return if @getPanes().length is 1
     thisPane = @getActivePane()
@@ -99,10 +97,10 @@ module.exports =
     @Pane      ?= thisPane.constructor
     @PaneAxis  ?= root.constructor
 
-    # parent.removeChild(thisPane, true)
     if root.getOrientation() isnt orientation
       @debug "Different orientation"
       root = new @PaneAxis({container, orientation, children: [@copyRoot(root)]})
+      container.setRoot(root)
 
     newPane = new @Pane()
     switch direction
@@ -110,19 +108,24 @@ module.exports =
         root.addChild(newPane, 0)
       when 'right', 'bottom'
         root.addChild(newPane)
-    @movePane thisPane, newPane
 
-    container.setRoot(root) if root isnt paneInfo.root
+    # [NOTE] Order is matter.
+    # Calling @movePane() before calling setRoot() cause
+    #  first item blank even after activateItemAtIndex 0.
+    @movePane thisPane, newPane
     container.destroyEmptyPanes()
-    @reparentPaneAxis(axis) for axis in @getAllAxis(root)
+
+    if atom.config.get('paner.mergeSameOrientaion')
+      @reparentPaneAxis(axis) for axis in @getAllAxis(root)
+
     newPane.activateItemAtIndex index
     newPane.activate()
 
   reparentPaneAxis: (axis) ->
-    console.log "called Reparent"
+    @debug "Reparent: start"
     parent = axis.getParent()
     if parent.getOrientation() is axis.getOrientation()
-      console.log "Reparenting!!"
+      @debug "Reparenting!!"
       children   = axis.getChildren()
       firstChild = children.shift()
       firstChild.setFlexScale()
@@ -159,6 +162,14 @@ module.exports =
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
     srcPane.destroy()
+    # items = srcPane.getItems()
+    # for item in items
+    #   srcPane.removeItem item
+    # dstPane.addItems items
+    # srcPane.destr
+    # for item in srcPane.getItems().reverse()
+    #   srcPane.moveItemToPane item, dstPane, 0
+    # srcPane.destroy()
 
   getAllAxis: (root, list=[]) ->
     for child in root.getChildren()
@@ -177,8 +188,8 @@ module.exports =
   copyRoot: (root) ->
     newRoot = @copyPaneAxis(root)
     root.destroy()
-    for paneAxis in @getAllAxis(newRoot)
-      newPaneAxis = @copyPaneAxis paneAxis
-      paneAxis.parent.replaceChild paneAxis, newPaneAxis
-      paneAxis.destroy()
+    for thisAxis in @getAllAxis(newRoot)
+      newPaneAxis = @copyPaneAxis thisAxis
+      thisAxis.getParent().replaceChild thisAxis, newPaneAxis
+      thisAxis.destroy()
     newRoot

@@ -4,7 +4,11 @@ atom-workspace.paner-maximize {
   }
   atom-pane-container {
     position: relative;
-    atom-pane.active {
+    atom-pane.pane {
+      display: none;
+    }
+    atom-pane.pane.active {
+      display: flex;
       position: absolute;
       top: 0;
       right: 0;
