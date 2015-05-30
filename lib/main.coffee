@@ -76,11 +76,42 @@ module.exports =
     {container, orientation} = paneAxis
     new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
 
+  copyRoot: (root) ->
+    newRoot = @copyPaneAxis(root)
+    root.destroy()
+    for paneAxis in @getAllAxis(newRoot)
+      # unsubscribe before copy
+      for child in paneAxis.getChildren()
+        paneAxis.unsubscribeFromChild(child)
+
+      newPaneAxis = @copyPaneAxis paneAxis
+      paneAxis.parent.replaceChild paneAxis, newPaneAxis
+      paneAxis.destroy()
+    newRoot
+
   # [FIXME]
-  # Occasionally blank pane, remain on original pane position.
+  # Occasionally blank pane remain on original pane position.
   # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
-  # This issue is already reported to
-  #  https://github.com/atom/atom/issues/4643
+  # This issue is already reported to https://github.com/atom/atom/issues/4643
+  #
+  # [NOTE]
+  # This code is result of try&error to get desirble result.
+  #  * I don't understand why @copyRoot is necessary, but without copying PaneAxis,
+  #    it seem to detatch View element and not worked as expected.
+  #  * Simply changing order of children by splicing children of PaneAxis or same
+  #    kind of direct manupilation to Pane or PaneAxis won't work, it easily bypassing
+  #    event system and you got buch of Exception.
+  #  * I wanted to use `thisPane` instead of `new Pane() and @movePane`, but I gave up to
+  #    solve lot of Exception caused by removeChild(thisPane). So I took @movePane() approarch.
+  #
+  # I know current implementation is not ideal and not clean.
+  # There must be better way.
+  # But for now I took 'try&erro&pick code that worked' approarch.
+  #
+  # [TODO]
+  # Understand Pane, PaneAxis, PaneContainer and its corresponding ViewElement and surrounding
+  # Event callback.
+  # Improve this function without using @copyRoot?
   very: (direction) ->
     return if @getPanes().length is 1
     thisPane = @getActivePane()
@@ -90,13 +121,10 @@ module.exports =
     @Pane      ?= thisPane.constructor
     @PaneAxis  ?= root.constructor
 
+    parent.removeChild(thisPane, true)
     if root.getOrientation() isnt orientation
       @debug "Different orientation"
-      for child in root.getChildren()
-        root.unsubscribeFromChild(child)
-
-      origRoot = @copyPaneAxis root
-      root     = new @PaneAxis({container, orientation, children: [origRoot]})
+      root = new @PaneAxis({container, orientation, children: [@copyRoot(root)]})
 
     newPane = new @Pane()
     switch direction
@@ -107,9 +135,8 @@ module.exports =
     @movePane thisPane, newPane
 
     container.setRoot(root) if root isnt paneInfo.root
+    # container.destroyEmptyPanes()
     @reparent(axis) for axis in @getAllAxis(root)
-
-    container.destroyEmptyPanes()
     newPane.activateItemAtIndex index
     newPane.activate()
 
@@ -120,15 +147,9 @@ module.exports =
         @getAllAxis child, list
     return list
 
-
-  isEqualOrientationAxis: (axis, orientation) ->
-    (axis instanceof @PaneAxis) and (axis.getOrientation() is orientation)
-
   reparent: (axis) ->
     parent = axis.getParent()
-    # console.log "parent: #{parent.getOrientation()}, me: #{axis.getOrientation()}"
     if parent.getOrientation() is axis.getOrientation()
-      # console.log "match!"
       children   = axis.getChildren()
       firstChild = children.shift()
       firstChild.setFlexScale()
@@ -137,7 +158,6 @@ module.exports =
         parent.insertChildAfter(firstChild, children.shift())
       axis.destroy()
       parent
-
 
   # Utility
   getPanes: ->
