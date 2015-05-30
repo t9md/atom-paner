@@ -1,4 +1,4 @@
 ## 0.1.1 - Doc
-* Delete comment outed codes.
+* Delete commented codes.
 
 ## 0.1.0 - First Release
