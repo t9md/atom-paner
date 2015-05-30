@@ -67,28 +67,6 @@ module.exports =
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
 
-  movePane: (srcPane, dstPane) ->
-    for item, i in srcPane.getItems()
-      srcPane.moveItemToPane item, dstPane, i
-    srcPane.destroy()
-
-  copyPaneAxis: (paneAxis) ->
-    {container, orientation} = paneAxis
-    new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
-
-  copyRoot: (root) ->
-    newRoot = @copyPaneAxis(root)
-    root.destroy()
-    for paneAxis in @getAllAxis(newRoot)
-      # unsubscribe before copy
-      for child in paneAxis.getChildren()
-        paneAxis.unsubscribeFromChild(child)
-
-      newPaneAxis = @copyPaneAxis paneAxis
-      paneAxis.parent.replaceChild paneAxis, newPaneAxis
-      paneAxis.destroy()
-    newRoot
-
   # [FIXME]
   # Occasionally blank pane remain on original pane position.
   # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
@@ -135,21 +113,16 @@ module.exports =
     @movePane thisPane, newPane
 
     container.setRoot(root) if root isnt paneInfo.root
-    # container.destroyEmptyPanes()
-    @reparent(axis) for axis in @getAllAxis(root)
+    container.destroyEmptyPanes()
+    # @reparentPaneAxis(axis) for axis in @getAllAxis(root)
     newPane.activateItemAtIndex index
     newPane.activate()
 
-  getAllAxis: (root, list=[]) ->
-    for child in root.getChildren()
-      if child instanceof @PaneAxis
-        list.push child
-        @getAllAxis child, list
-    return list
-
-  reparent: (axis) ->
+  reparentPaneAxis: (axis) ->
+    console.log "called Reparent"
     parent = axis.getParent()
     if parent.getOrientation() is axis.getOrientation()
+      console.log "Reparenting!!"
       children   = axis.getChildren()
       firstChild = children.shift()
       firstChild.setFlexScale()
@@ -160,11 +133,9 @@ module.exports =
       parent
 
   # Utility
-  getPanes: ->
-    atom.workspace.getPanes()
-
-  getActivePane: ->
-    atom.workspace.getActivePane()
+  deactivate:    -> @disposables.dispose()
+  getPanes:      -> atom.workspace.getPanes()
+  getActivePane: -> atom.workspace.getActivePane()
 
   getPaneInfo: (pane) ->
     pane:      pane
@@ -184,5 +155,30 @@ module.exports =
     return unless atom.config.get('paner.debug')
     console.log msg
 
-  deactivate: ->
-    @disposables.dispose()
+  movePane: (srcPane, dstPane) ->
+    for item, i in srcPane.getItems()
+      srcPane.moveItemToPane item, dstPane, i
+    srcPane.destroy()
+
+  getAllAxis: (root, list=[]) ->
+    for child in root.getChildren()
+      if child instanceof @PaneAxis
+        list.push child
+        @getAllAxis child, list
+    return list
+
+  copyPaneAxis: (paneAxis) ->
+    {container, orientation} = paneAxis
+    new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
+
+  copyRoot: (root) ->
+    newRoot = @copyPaneAxis(root)
+    root.destroy()
+    for paneAxis in @getAllAxis(newRoot)
+      # unsubscribe before copy
+      paneAxis.unsubscribeFromChild(child) for child in paneAxis.getChildren()
+
+      newPaneAxis = @copyPaneAxis paneAxis
+      paneAxis.parent.replaceChild paneAxis, newPaneAxis
+      paneAxis.destroy()
+    newRoot
