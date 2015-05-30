@@ -1,7 +1,13 @@
 {CompositeDisposable} = require 'atom'
 _ = require 'underscore-plus'
 
+Config =
+  debug:
+    type: 'boolean'
+    default: false
+
 module.exports =
+  config: Config
   PaneAxis: null
   Pane:     null
 
@@ -9,13 +15,13 @@ module.exports =
     @disposables = new CompositeDisposable
 
     @disposables.add atom.commands.add 'atom-workspace',
-      'paner:maximize':    => @maximize()
-      'paner:swap-item':   => @swapItem()
-      'paner:very-top':    => @very('top')
-      'paner:very-bottom': => @very('bottom')
-      'paner:very-left':   => @very('left')
-      'paner:very-right':  => @very('right')
-      'paner:test':        => @test()
+      'paner:maximize':     => @maximize()
+      'paner:swap-item':    => @swapItem()
+      'paner:very-top':     => @very('top')
+      'paner:very-bottom':  => @very('bottom')
+      'paner:very-left':    => @very('left')
+      'paner:very-right':   => @very('right')
+      'paner:toggle-debug': => @toggleDebug()
 
   maximize: ->
     workspaceElement = atom.views.getView(atom.workspace)
@@ -24,25 +30,10 @@ module.exports =
     @disposables.add @getActivePane().onDidChangeActive ->
       workspaceElement.classList.remove('paner-maximize')
 
-  getPanes: ->
-    atom.workspace.getPanes()
-
-  getActivePane: ->
-    atom.workspace.getActivePane()
-
-  getPaneInfo: (pane) ->
-    pane:      pane
-    item:      pane.getActiveItem()
-    index:     pane.getActiveItemIndex()
-    container: pane.getContainer()
-    root:      pane.getContainer().getRoot()
-    parent:    pane.getParent()
-
-  getOrientation: (direction) ->
-    if direction in ['top', 'bottom']
-      'vertical'
-    else
-      'horizontal'
+  toggleDebug: ->
+    atom.config.toggle('paner.debug')
+    state = atom.config.get('paner.debug') and "enabled" or "disabled"
+    console.log "paner: debug #{state}"
 
   # Like Vim's `ctrl-w x`, select pane within current PaneAxis.
   #
@@ -76,9 +67,6 @@ module.exports =
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
 
-  deactivate: ->
-    @disposables.dispose()
-
   movePane: (srcPane, dstPane) ->
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
@@ -87,13 +75,6 @@ module.exports =
   copyPaneAxis: (paneAxis) ->
     {container, orientation} = paneAxis
     new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
-
-    # clone = atom.deserializers.deserialize(paneAxis.serialize())
-    # container = paneAxis.getContainer()
-    # clone.setContainer(container)
-    # clone.children.forEach (child) ->
-    #   child.setContainer(container)
-    #   child.setParent(clone)
 
   # [FIXME]
   # Occasionally blank pane, remain on original pane position.
@@ -110,18 +91,12 @@ module.exports =
     @PaneAxis  ?= root.constructor
 
     if root.getOrientation() isnt orientation
-      console.log "Different orientation"
-      # root.unsubscribeFromChild(child)
-      origRoot = new @PaneAxis({
-        container,
-        orientation: root.getOrientation(),
-        children: root.getChildren()
-        })
-
+      @debug "Different orientation"
       for child in root.getChildren()
-        root.removeChild(child)
-      root.destroy()
-      root  = new @PaneAxis({container, orientation, children: [origRoot]})
+        root.unsubscribeFromChild(child)
+
+      origRoot = @copyPaneAxis root
+      root     = new @PaneAxis({container, orientation, children: [origRoot]})
 
     newPane = new @Pane()
     switch direction
@@ -131,21 +106,29 @@ module.exports =
         root.addChild(newPane)
     @movePane thisPane, newPane
 
-    if root isnt paneInfo.root
-      container.setRoot(root)
-      @reparentChildren root, orientation
+    container.setRoot(root) if root isnt paneInfo.root
+    @reparent(axis) for axis in @getAllAxis(root)
 
     container.destroyEmptyPanes()
     newPane.activateItemAtIndex index
     newPane.activate()
 
+  getAllAxis: (root, list=[]) ->
+    for child in root.getChildren()
+      if child instanceof @PaneAxis
+        list.push child
+        @getAllAxis child, list
+    return list
+
+
   isEqualOrientationAxis: (axis, orientation) ->
     (axis instanceof @PaneAxis) and (axis.getOrientation() is orientation)
 
-  reparentChildren: (parent, orientation) ->
-    console.log "Reparent"
-    for axis in parent.children when @isEqualOrientationAxis(axis, orientation)
-      console.log "Reparent: found"
+  reparent: (axis) ->
+    parent = axis.getParent()
+    # console.log "parent: #{parent.getOrientation()}, me: #{axis.getOrientation()}"
+    if parent.getOrientation() is axis.getOrientation()
+      # console.log "match!"
       children   = axis.getChildren()
       firstChild = children.shift()
       firstChild.setFlexScale()
@@ -153,14 +136,33 @@ module.exports =
       while children.length
         parent.insertChildAfter(firstChild, children.shift())
       axis.destroy()
+      parent
 
-  # reparent
-  # if paneInfo.root.getOrientation() isnt orientation
-  #   for child in root.children when (child instanceof @PaneAxis) and (child.getOrientation() is orientation)
-  #     console.log "reParent!!"
-  #     children  = child.getChildren()
-  #     child.reparentLastChild()
-  #     children.shift()
-  #     while children.length
-  #       root.addChild(children.shift())
-  #     child.destroy()
+
+  # Utility
+  getPanes: ->
+    atom.workspace.getPanes()
+
+  getActivePane: ->
+    atom.workspace.getActivePane()
+
+  getPaneInfo: (pane) ->
+    pane:      pane
+    item:      pane.getActiveItem()
+    index:     pane.getActiveItemIndex()
+    container: pane.getContainer()
+    root:      pane.getContainer().getRoot()
+    parent:    pane.getParent()
+
+  getOrientation: (direction) ->
+    if direction in ['top', 'bottom']
+      'vertical'
+    else
+      'horizontal'
+
+  debug: (msg) ->
+    return unless atom.config.get('paner.debug')
+    console.log msg
+
+  deactivate: ->
+    @disposables.dispose()
