@@ -162,14 +162,6 @@ module.exports =
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
     srcPane.destroy()
-    # items = srcPane.getItems()
-    # for item in items
-    #   srcPane.removeItem item
-    # dstPane.addItems items
-    # srcPane.destr
-    # for item in srcPane.getItems().reverse()
-    #   srcPane.moveItemToPane item, dstPane, 0
-    # srcPane.destroy()
 
   getAllAxis: (root, list=[]) ->
     for child in root.getChildren()
