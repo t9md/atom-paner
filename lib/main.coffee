@@ -61,6 +61,10 @@ module.exports =
     configDestroyEmptyPanes = atom.config.get('core.destroyEmptyPanes')
     atom.config.set('core.destroyEmptyPanes', false)
 
+    # Avoid pane destroyed when PreviewPane is enabled on tabs package.
+    @clearPreviewForItem src.pane, src.item
+    @clearPreviewForItem dst.pane, dst.item
+
     src.pane.moveItemToPane src.item, dst.pane, dst.index
     dst.pane.moveItemToPane dst.item, src.pane, src.index
     src.pane.activateItem dst.item
@@ -158,9 +162,15 @@ module.exports =
     return unless atom.config.get('paner.debug')
     console.log msg
 
+  clearPreviewForItem: (pane, item) ->
+    index = pane.getItems().indexOf(item)
+    paneElement = atom.views.getView(pane)
+    paneElement.getElementsByClassName('preview-tab')[0]?.clearPreview()
+
   movePane: (srcPane, dstPane) ->
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
+      @clearPreviewForItem dstPane, item
     srcPane.destroy()
 
   getAllAxis: (root, list=[]) ->
