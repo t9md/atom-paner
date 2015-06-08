@@ -170,7 +170,7 @@ module.exports =
   movePane: (srcPane, dstPane) ->
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
-      @clearPreviewForItem dstPane
+      @clearPreviewTabForPane dstPane
     srcPane.destroy()
 
   getAllAxis: (root, list=[]) ->

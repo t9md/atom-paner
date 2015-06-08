@@ -19,6 +19,13 @@ Automatically exit Maximized mode if Active Pane changed.
 * `paner:maximize` to Maximize or de-Maximize current Pane Item.
 * `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
 
+# NOTE
+
+From atom 0.206.0, PreviewTab feature is introduces.  
+If user enabled this feature, tab not modified or dblclicked is treated as preview, temporary tab which is replaced when opening another file.  
+This tab characteristic don't well work with paner since is move tab(paneItem) from pane to pane.  
+To workaround this, paner manually clear(or reset) preview state of tab for the pane which is subject to manipulation. See [#1](https://github.com/t9md/atom-paner/issues/1).  
+
 # Keymap
 No keymap by default.
 

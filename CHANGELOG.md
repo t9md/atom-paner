@@ -1,5 +1,6 @@
 ## 0.1.3 - Improve
 * Rename clearPreviewForItem to clearPreviewTabForPane.
+* Add Note for cleraring preview-tab state.
 
 ## 0.1.2 - Support preview-pane
 * Fix preview-pane issue #1
