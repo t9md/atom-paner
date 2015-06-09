@@ -2,7 +2,7 @@
 
 Missing pane manipulation helpers.
 
-![gif](https://raw.githubusercontent.com/t9md/t9md/476f9dc48cd2d3e8fce7ee0935f04d36d0fc04c0/img/atom-paner.gif)
+![gif](https://raw.githubusercontent.com/t9md/t9md/4407eb697d1f83a8ce6a16ce096a98a270980c3b/img/atom-paner.gif)
 
 # Feature
 

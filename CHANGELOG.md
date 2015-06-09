@@ -1,4 +1,5 @@
-## 0.1.4 - Improve [pre-release]
+## 0.1.4 - Improve
+* Update GIF
 * Improve performance when clearing preview-tab
 
 ## 0.1.3 - Improve
