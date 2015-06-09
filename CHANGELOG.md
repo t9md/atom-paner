@@ -1,3 +1,6 @@
+## 0.1.4 - Improve [pre-release]
+* Improve performance when clearing preview-tab
+
 ## 0.1.3 - Improve
 * Rename clearPreviewForItem to clearPreviewTabForPane.
 * Add Note for cleraring preview-tab state.

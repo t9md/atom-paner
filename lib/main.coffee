@@ -61,12 +61,14 @@ module.exports =
     configDestroyEmptyPanes = atom.config.get('core.destroyEmptyPanes')
     atom.config.set('core.destroyEmptyPanes', false)
 
-    @clearPreviewTabForPane src.pane
-    @clearPreviewTabForPane dst.pane
+    srcPaneElement = atom.views.getView(src.pane)
+    dstPaneElement = atom.views.getView(dst.pane)
+    @clearPreviewTabForPaneElement srcPaneElement
+    @clearPreviewTabForPaneElement dstPaneElement
     src.pane.moveItemToPane src.item, dst.pane, dst.index
     dst.pane.moveItemToPane dst.item, src.pane, src.index
-    @clearPreviewTabForPane src.pane
-    @clearPreviewTabForPane dst.pane
+    @clearPreviewTabForPaneElement srcPaneElement
+    @clearPreviewTabForPaneElement dstPaneElement
 
     src.pane.activateItem dst.item
     src.pane.activate()
@@ -163,14 +165,14 @@ module.exports =
     return unless atom.config.get('paner.debug')
     console.log msg
 
-  clearPreviewTabForPane: (pane) ->
-    paneElement = atom.views.getView(pane)
+  clearPreviewTabForPaneElement: (paneElement) ->
     paneElement.getElementsByClassName('preview-tab')[0]?.clearPreview()
 
   movePane: (srcPane, dstPane) ->
+    dstPaneElement = atom.views.getView(dstPane)
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
-      @clearPreviewTabForPane dstPane
+      @clearPreviewTabForPaneElement dstPaneElement
     srcPane.destroy()
 
   getAllAxis: (root, list=[]) ->
