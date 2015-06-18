@@ -1,7 +1,7 @@
 {
   "name": "paner",
   "main": "./lib/main",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Pane manipulation helper",
   "activationCommands": {
     "atom-workspace": [
