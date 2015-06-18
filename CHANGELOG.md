@@ -1,3 +1,6 @@
+## 0.1.5 - Improve
+- use activationCommands for faster startup
+
 ## 0.1.4 - Improve
 * Update GIF
 * Improve performance when clearing preview-tab

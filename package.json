@@ -3,6 +3,17 @@
   "main": "./lib/main",
   "version": "0.1.4",
   "description": "Pane manipulation helper",
+  "activationCommands": {
+    "atom-workspace": [
+      "paner:maximize",
+      "paner:swap-item",
+      "paner:very-top",
+      "paner:very-bottom",
+      "paner:very-left",
+      "paner:very-right",
+      "paner:toggle-debug"
+    ]
+  },
   "repository": "https://github.com/t9md/atom-paner",
   "license": "MIT",
   "engines": {
