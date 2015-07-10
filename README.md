@@ -6,7 +6,9 @@ Missing pane manipulation helpers.
 
 # Feature
 
-* Swap Pane Item: Exchange PaneItem with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
+* Swap PaneItem: Exchange PaneItem with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
+
+* Merge PaneItem: Merge active PaneItem to adjacent PaneItem.
 
 * Maximize: Maximize pane. Well know as **Zen mode**.
 Automatically exit Maximized mode if Active Pane changed.
@@ -15,8 +17,9 @@ Automatically exit Maximized mode if Active Pane changed.
 
 # How to use
 
-* `paner:swap-item` to swap Pane Item with Adjacent pane Item.
-* `paner:maximize` to Maximize or de-Maximize current Pane Item.
+* `paner:swap-item` to swap PaneItem with adjacent PaneItem.
+* `paner:merge-item` to merge(or consolidate) PaneItem to adjacent PaneItem
+* `paner:maximize` to Maximize or de-Maximize current PaneItem.
 * `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
 
 # NOTE
@@ -34,6 +37,7 @@ No keymap by default.
 ```coffeescript
 'atom-workspace:not([mini])':
   'cmd-k x':         'paner:swap-item'
+  'cmd-k X':         'paner:merge-item'
   'cmd-enter':       'paner:maximize'
   'cmd-k cmd-up':    'paner:very-top'
   'cmd-k cmd-down':  'paner:very-bottom'
@@ -46,6 +50,7 @@ No keymap by default.
 ```coffeescript
 'atom-text-editor.vim-mode.command-mode':
   'ctrl-w x':     'paner:swap-item'
+  'ctrl-w X':     'paner:merge-item'
   'ctrl-w enter': 'paner:maximize'
   'ctrl-w K':     'paner:very-top'
   'ctrl-w J':     'paner:very-bottom'
@@ -58,6 +63,7 @@ No keymap by default.
 ```coffeescript
 'atom-text-editor.vim-mode.command-mode':
   'cmd-x':     'paner:swap-item'
+  'cmd-X':     'paner:merge-item'
   'cmd-enter': 'paner:maximize'
   'cmd-K':     'paner:very-top'
   'cmd-J':     'paner:very-bottom'

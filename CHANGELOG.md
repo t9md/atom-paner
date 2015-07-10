@@ -1,5 +1,9 @@
+## 0.1.6 - Merge PaneItem
+- New command `paner:merge-item` to merge PaneItem.
+- FIX when swapping item with empty Pane cause error.
+
 ## 0.1.5 - Improve
-- use activationCommands for faster startup
+- Use activationCommands for faster startup
 
 ## 0.1.4 - Improve
 * Update GIF

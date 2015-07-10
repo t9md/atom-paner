@@ -21,6 +21,7 @@ module.exports =
     @disposables.add atom.commands.add 'atom-workspace',
       'paner:maximize':     => @maximize()
       'paner:swap-item':    => @swapItem()
+      'paner:merge-item':   => @mergeItem()
       'paner:very-top':     => @very('top')
       'paner:very-bottom':  => @very('bottom')
       'paner:very-left':    => @very('left')
@@ -44,8 +45,9 @@ module.exports =
   #  * If next Pane doesn't exits, choose previous Pane.
   getAdjacentPane: ->
     activePane = @getActivePane()
-    children   = activePane.getParent().getChildren()
-    index      = children.indexOf(activePane)
+    children = activePane.getParent().getChildren?()
+    return unless children
+    index = children.indexOf(activePane)
 
     _.chain([children[index-1], children[index+1]])
       .filter((pane) -> pane?.constructor.name is 'Pane')
@@ -66,15 +68,29 @@ module.exports =
     @clearPreviewTabForPaneElement srcPaneElement
     @clearPreviewTabForPaneElement dstPaneElement
     src.pane.moveItemToPane src.item, dst.pane, dst.index
-    dst.pane.moveItemToPane dst.item, src.pane, src.index
-    @clearPreviewTabForPaneElement srcPaneElement
+    if dst.item?
+      dst.pane.moveItemToPane dst.item, src.pane, src.index
     @clearPreviewTabForPaneElement dstPaneElement
+    @clearPreviewTabForPaneElement srcPaneElement
 
-    src.pane.activateItem dst.item
+    if dst.item?
+      src.pane.activateItem dst.item
     src.pane.activate()
 
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
+
+  mergeItem: ->
+    return unless adjacentPane = @getAdjacentPane()
+
+    src = @getPaneInfo @getActivePane()
+    dst = @getPaneInfo adjacentPane
+
+    src.pane.moveItemToPane src.item, dst.pane, dst.index
+
+    dstPaneElement = atom.views.getView(dst.pane)
+    @clearPreviewTabForPaneElement dstPaneElement
+
 
   # This code is result of try&error to get desirble result.
   #  * I couldn't understand why @copyRoot is necessary, but without copying PaneAxis,
