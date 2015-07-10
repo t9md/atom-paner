@@ -1,3 +1,7 @@
+## 0.1.7 - Send and Merge, appropriate name.
+- `merge-item` was confusing name. Now renamed to `send-item`.
+- old `merge-item` behave send and activate item just sent.
+
 ## 0.1.6 - Merge PaneItem
 - New command `paner:merge-item` to merge PaneItem.
 - FIX when swapping item with empty Pane cause error.

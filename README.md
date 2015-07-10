@@ -8,7 +8,7 @@ Missing pane manipulation helpers.
 
 * Swap PaneItem: Exchange PaneItem with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
 
-* Merge PaneItem: Merge active PaneItem to adjacent PaneItem.
+* Send PaneItem: Send active PaneItem to adjacent PaneItem.
 
 * Maximize: Maximize pane. Well know as **Zen mode**.
 Automatically exit Maximized mode if Active Pane changed.
@@ -18,9 +18,12 @@ Automatically exit Maximized mode if Active Pane changed.
 # How to use
 
 * `paner:swap-item` to swap PaneItem with adjacent PaneItem.
-* `paner:merge-item` to merge(or consolidate) PaneItem to adjacent PaneItem
+* `paner:send-item` to send active PaneItem to adjacent Pane.
 * `paner:maximize` to Maximize or de-Maximize current PaneItem.
 * `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
+
+* `paner:merge-item` same as `paner:send-item` but it activate sent item.
+
 
 # NOTE
 
@@ -37,7 +40,7 @@ No keymap by default.
 ```coffeescript
 'atom-workspace:not([mini])':
   'cmd-k x':         'paner:swap-item'
-  'cmd-k X':         'paner:merge-item'
+  'cmd-k X':         'paner:send-item'
   'cmd-enter':       'paner:maximize'
   'cmd-k cmd-up':    'paner:very-top'
   'cmd-k cmd-down':  'paner:very-bottom'
@@ -47,10 +50,12 @@ No keymap by default.
 
 * [vim-mode](https://atom.io/packages/vim-mode) user.
 
+If you want to manipulate pane which is not instance of TextEdior(e.g. settings-view), you need to set keymap on `atom-workspace` not on `atom-text-editor`.
+
 ```coffeescript
 'atom-text-editor.vim-mode.command-mode':
   'ctrl-w x':     'paner:swap-item'
-  'ctrl-w X':     'paner:merge-item'
+  'ctrl-w X':     'paner:send-item'
   'ctrl-w enter': 'paner:maximize'
   'ctrl-w K':     'paner:very-top'
   'ctrl-w J':     'paner:very-bottom'
@@ -61,9 +66,9 @@ No keymap by default.
 * Mine.
 
 ```coffeescript
-'atom-text-editor.vim-mode.command-mode':
+'atom-workspace:not([mini])':
   'cmd-x':     'paner:swap-item'
-  'cmd-X':     'paner:merge-item'
+  'cmd-X':     'paner:send-item'
   'cmd-enter': 'paner:maximize'
   'cmd-K':     'paner:very-top'
   'cmd-J':     'paner:very-bottom'

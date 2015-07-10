@@ -22,6 +22,7 @@ module.exports =
       'paner:maximize':     => @maximize()
       'paner:swap-item':    => @swapItem()
       'paner:merge-item':   => @mergeItem()
+      'paner:send-item':    => @mergeItem {activate: false}
       'paner:very-top':     => @very('top')
       'paner:very-bottom':  => @very('bottom')
       'paner:very-left':    => @very('left')
@@ -80,17 +81,18 @@ module.exports =
     # Revert original setting
     atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
 
-  mergeItem: ->
+  mergeItem: (options) ->
     return unless adjacentPane = @getAdjacentPane()
 
     src = @getPaneInfo @getActivePane()
     dst = @getPaneInfo adjacentPane
 
     src.pane.moveItemToPane src.item, dst.pane, dst.index
-
     dstPaneElement = atom.views.getView(dst.pane)
     @clearPreviewTabForPaneElement dstPaneElement
-
+    dst.pane.activateItem src.item
+    if options.activate
+      dst.pane.activate()
 
   # This code is result of try&error to get desirble result.
   #  * I couldn't understand why @copyRoot is necessary, but without copying PaneAxis,
