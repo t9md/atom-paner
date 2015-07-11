@@ -7,12 +7,12 @@
     "atom-workspace": [
       "paner:maximize",
       "paner:swap-item",
+      "paner:send-item",
       "paner:merge-item",
       "paner:very-top",
       "paner:very-bottom",
       "paner:very-left",
-      "paner:very-right",
-      "paner:toggle-debug"
+      "paner:very-right"
     ]
   },
   "repository": "https://github.com/t9md/atom-paner",

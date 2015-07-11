@@ -27,7 +27,6 @@ module.exports =
       'paner:very-bottom':  => @very('bottom')
       'paner:very-left':    => @very('left')
       'paner:very-right':   => @very('right')
-      'paner:toggle-debug': => @toggleDebug()
 
   maximize: ->
     workspaceElement = atom.views.getView(atom.workspace)
@@ -36,10 +35,10 @@ module.exports =
     @disposables.add @getActivePane().onDidChangeActive ->
       workspaceElement.classList.remove('paner-maximize')
 
-  toggleDebug: ->
-    atom.config.toggle('paner.debug')
-    state = atom.config.get('paner.debug') and "enabled" or "disabled"
-    console.log "paner: debug #{state}"
+  # toggleDebug: ->
+  #   atom.config.toggle('paner.debug')
+  #   state = atom.config.get('paner.debug') and "enabled" or "disabled"
+  #   console.log "paner: debug #{state}"
 
   # Get nearest pane within current PaneAxis.
   #  * Choose next Pane if exists.

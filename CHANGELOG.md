@@ -1,3 +1,6 @@
+## 0.1.8 FIX
+- `activationCommands` did use old `merge-item`. Fix to `send-item`.
+
 ## 0.1.7 - Send and Merge, appropriate name.
 - `merge-item` was confusing name. Now renamed to `send-item`.
 - old `merge-item` behave send and activate item just sent.
@@ -15,7 +18,7 @@
 
 ## 0.1.3 - Improve
 * Rename clearPreviewForItem to clearPreviewTabForPane.
-* Add Note for cleraring preview-tab state.
+* Add Note for clearing preview-tab state.
 
 ## 0.1.2 - Support preview-pane
 * Fix preview-pane issue #1
