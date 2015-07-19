@@ -1,3 +1,9 @@
+## 0.1.9 FIX
+- `merge-item` bug.
+- Refactoring
+- Ensure to restore `core.destroyEmptyPanes` setting in case of error.
+- Delete unused keymap file
+
 ## 0.1.8 FIX
 - `activationCommands` did use old `merge-item`. Fix to `send-item`.
 

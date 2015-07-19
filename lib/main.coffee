@@ -1,6 +1,9 @@
 {CompositeDisposable} = require 'atom'
 _ = require 'underscore-plus'
 
+PaneAxis = null
+Pane     = null
+
 Config =
   debug:
     type: 'boolean'
@@ -12,45 +15,45 @@ Config =
 
 module.exports =
   config: Config
-  PaneAxis: null
-  Pane:     null
 
   activate: (state) ->
-    @disposables = new CompositeDisposable
+    @subscriptions = new CompositeDisposable
+    Pane = atom.workspace.getActivePane().constructor
 
-    @disposables.add atom.commands.add 'atom-workspace',
-      'paner:maximize':     => @maximize()
-      'paner:swap-item':    => @swapItem()
-      'paner:merge-item':   => @mergeItem()
-      'paner:send-item':    => @mergeItem {activate: false}
-      'paner:very-top':     => @very('top')
-      'paner:very-bottom':  => @very('bottom')
-      'paner:very-left':    => @very('left')
-      'paner:very-right':   => @very('right')
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'paner:maximize':    => @maximize()
+      'paner:swap-item':   => @swapItem()
+      'paner:merge-item':  => @mergeItem activate: true
+      'paner:send-item':   => @mergeItem activate: false
+      'paner:very-top':    => @very 'top'
+      'paner:very-bottom': => @very 'bottom'
+      'paner:very-left':   => @very 'left'
+      'paner:very-right':  => @very 'right'
 
+  deactivate: ->
+    @subscriptions.dispose()
+    Pane     = null
+    PaneAxis = null
+
+  # Simply add/remove css class, actual maximization effect is done by CSS.
   maximize: ->
     workspaceElement = atom.views.getView(atom.workspace)
     workspaceElement.classList.toggle('paner-maximize')
 
-    @disposables.add @getActivePane().onDidChangeActive ->
+    @subscriptions.add @getActivePane().onDidChangeActive ->
       workspaceElement.classList.remove('paner-maximize')
-
-  # toggleDebug: ->
-  #   atom.config.toggle('paner.debug')
-  #   state = atom.config.get('paner.debug') and "enabled" or "disabled"
-  #   console.log "paner: debug #{state}"
 
   # Get nearest pane within current PaneAxis.
   #  * Choose next Pane if exists.
   #  * If next Pane doesn't exits, choose previous Pane.
   getAdjacentPane: ->
-    activePane = @getActivePane()
-    children = activePane.getParent().getChildren?()
-    return unless children
-    index = children.indexOf(activePane)
+    thisPane = @getActivePane()
+    return unless children = thisPane.getParent().getChildren?()
+    index = children.indexOf thisPane
 
     _.chain([children[index-1], children[index+1]])
-      .filter((pane) -> pane?.constructor.name is 'Pane')
+      .filter (pane) ->
+        pane instanceof Pane
       .last()
       .value()
 
@@ -59,39 +62,33 @@ module.exports =
     src = @getPaneInfo @getActivePane()
     dst = @getPaneInfo adjacentPane
 
-    # Temporarily disable to avoid pane itself destroyed.
+    # In case there is only one item in pane, we need to avoid pane itself
+    # destroyed while swapping.
     configDestroyEmptyPanes = atom.config.get('core.destroyEmptyPanes')
-    atom.config.set('core.destroyEmptyPanes', false)
+    try
+      atom.config.set('core.destroyEmptyPanes', false)
+      @movePaneItem src.pane, src.item, dst.pane, dst.index
+      @movePaneItem dst.pane, dst.item, src.pane, src.index if dst.item?
+      src.pane.activateItem dst.item if dst.item?
+      src.pane.activate()
+    finally
+      # Revert original setting
+      atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
 
-    srcPaneElement = atom.views.getView(src.pane)
-    dstPaneElement = atom.views.getView(dst.pane)
-    @clearPreviewTabForPaneElement srcPaneElement
-    @clearPreviewTabForPaneElement dstPaneElement
-    src.pane.moveItemToPane src.item, dst.pane, dst.index
-    if dst.item?
-      dst.pane.moveItemToPane dst.item, src.pane, src.index
-    @clearPreviewTabForPaneElement dstPaneElement
-    @clearPreviewTabForPaneElement srcPaneElement
-
-    if dst.item?
-      src.pane.activateItem dst.item
-    src.pane.activate()
-
-    # Revert original setting
-    atom.config.set('core.destroyEmptyPanes', configDestroyEmptyPanes)
-
-  mergeItem: (options) ->
+  mergeItem: ({activate}={}) ->
     return unless adjacentPane = @getAdjacentPane()
 
     src = @getPaneInfo @getActivePane()
     dst = @getPaneInfo adjacentPane
 
-    src.pane.moveItemToPane src.item, dst.pane, dst.index
-    dstPaneElement = atom.views.getView(dst.pane)
-    @clearPreviewTabForPaneElement dstPaneElement
+    @movePaneItem src.pane, src.item, dst.pane, dst.index
     dst.pane.activateItem src.item
-    if options.activate
-      dst.pane.activate()
+    dst.pane.activate() if activate
+
+  movePaneItem: (srcPane, srcItem, dstPane, dstIndex) ->
+    @clearPreviewTabForPane dstPane
+    srcPane.moveItemToPane srcItem, dstPane, dstIndex
+    @clearPreviewTabForPane dstPane
 
   # This code is result of try&error to get desirble result.
   #  * I couldn't understand why @copyRoot is necessary, but without copying PaneAxis,
@@ -99,9 +96,9 @@ module.exports =
   #  * Simply changing order of children by splicing children of PaneAxis or similar
   #    kind of direct manupilation to Pane or PaneAxis won't work, it easily bypassing
   #    event callback and produce bunch of Exception.
-  #  * I wanted to use `thisPane` instead of `new Pane() and @movePane`, but I gave up to
-  #    solve lot of Exception caused by removeChild(thisPane). So I took @movePane() approarch.
-  #  * So as conclusion, code is far from ideal, I took dirty try&erro approarch,
+  #  * I wanted to use `thisPane` instead of `new Pane() and @moveAllPaneItems`, but I gave up to
+  #    solve a lot of exception caused by removeChild(thisPane). So I took @moveAllPaneItems() approarch.
+  #  * So as conclusion, code is far from ideal, I took dirty try&error approarch,
   #    need to be improved in future. There must be better way.
   #
   # [FIXME]
@@ -118,51 +115,46 @@ module.exports =
     paneInfo = @getPaneInfo thisPane
     {parent, index, root, container} = paneInfo
     orientation = @getOrientation direction
-    @Pane      ?= thisPane.constructor
-    @PaneAxis  ?= root.constructor
+
+    # If there is multiple pane in window, root is always instance of PaneAxis
+    PaneAxis ?= root.constructor
 
     if root.getOrientation() isnt orientation
       @debug "Different orientation"
-      root = new @PaneAxis({container, orientation, children: [@copyRoot(root)]})
+      root = new PaneAxis {container, orientation, children: [@copyRoot(root)]}
       container.setRoot(root)
 
-    newPane = new @Pane()
+    newPane = new Pane()
     switch direction
-      when 'top', 'left'
-        root.addChild(newPane, 0)
-      when 'right', 'bottom'
-        root.addChild(newPane)
+      when 'top', 'left'     then root.addChild(newPane, 0)
+      when 'right', 'bottom' then root.addChild(newPane)
 
     # [NOTE] Order is matter.
-    # Calling @movePane() before calling setRoot() cause
+    # Calling @moveAllPaneItems() before calling setRoot() cause
     #  first item blank even after activateItemAtIndex 0.
-    @movePane thisPane, newPane
+    @moveAllPaneItems thisPane, newPane
     container.destroyEmptyPanes()
 
     if atom.config.get('paner.mergeSameOrientaion')
-      @reparentPaneAxis(axis) for axis in @getAllAxis(root)
+      for paneAxis in @getAllPaneAxis(root)
+        @reparentPaneAxis paneAxis
 
     newPane.activateItemAtIndex index
     newPane.activate()
 
-  reparentPaneAxis: (axis) ->
+  reparentPaneAxis: (paneAxis) ->
     @debug "Reparent: start"
-    parent = axis.getParent()
-    if parent.getOrientation() is axis.getOrientation()
+    parent = paneAxis.getParent()
+    if parent.getOrientation() is paneAxis.getOrientation()
       @debug "Reparenting!!"
-      children   = axis.getChildren()
+      children   = paneAxis.getChildren()
       firstChild = children.shift()
       firstChild.setFlexScale()
-      parent.replaceChild(axis, firstChild)
+      parent.replaceChild(paneAxis, firstChild)
       while children.length
-        parent.insertChildAfter(firstChild, children.shift())
-      axis.destroy()
+        parent.insertChildAfter firstChild, children.shift()
+      paneAxis.destroy()
       parent
-
-  # Utility
-  deactivate:    -> @disposables.dispose()
-  getPanes:      -> atom.workspace.getPanes()
-  getActivePane: -> atom.workspace.getActivePane()
 
   getPaneInfo: (pane) ->
     pane:      pane
@@ -178,39 +170,49 @@ module.exports =
     else
       'horizontal'
 
-  debug: (msg) ->
-    return unless atom.config.get('paner.debug')
-    console.log msg
+  clearPreviewTabForPane: (pane) ->
+    @clearPreviewTabForPaneElement atom.views.getView(pane)
 
   clearPreviewTabForPaneElement: (paneElement) ->
     paneElement.getElementsByClassName('preview-tab')[0]?.clearPreview()
 
-  movePane: (srcPane, dstPane) ->
+  moveAllPaneItems: (srcPane, dstPane) ->
     dstPaneElement = atom.views.getView(dstPane)
     for item, i in srcPane.getItems()
       srcPane.moveItemToPane item, dstPane, i
       @clearPreviewTabForPaneElement dstPaneElement
     srcPane.destroy()
 
-  getAllAxis: (root, list=[]) ->
+  getAllPaneAxis: (root, results=[]) ->
     for child in root.getChildren()
-      if child instanceof @PaneAxis
-        list.push child
-        @getAllAxis child, list
-    return list
+      if child instanceof PaneAxis
+        results.push child
+        @getAllPaneAxis child, results
+    results
 
   copyPaneAxis: (paneAxis) ->
-    # unsubscribe before copy
-    paneAxis.unsubscribeFromChild(child) for child in paneAxis.getChildren()
+    for child in paneAxis.getChildren()
+      paneAxis.unsubscribeFromChild(child)
 
     {container, orientation} = paneAxis
-    new paneAxis.constructor({container, orientation, children: paneAxis.getChildren()})
+    new PaneAxis {container, orientation, children: paneAxis.getChildren()}
 
   copyRoot: (root) ->
     newRoot = @copyPaneAxis(root)
     root.destroy()
-    for thisAxis in @getAllAxis(newRoot)
-      newPaneAxis = @copyPaneAxis thisAxis
-      thisAxis.getParent().replaceChild thisAxis, newPaneAxis
-      thisAxis.destroy()
+    for paneAxis in @getAllPaneAxis(newRoot)
+      newPaneAxis = @copyPaneAxis paneAxis
+      paneAxis.getParent().replaceChild paneAxis, newPaneAxis
+      paneAxis.destroy()
     newRoot
+
+  # Utility
+  getPanes: ->
+    atom.workspace.getPanes()
+
+  getActivePane: ->
+    atom.workspace.getActivePane()
+
+  debug: (msg) ->
+    return unless atom.config.get('paner.debug')
+    console.log msg
