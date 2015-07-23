@@ -53,7 +53,7 @@ No keymap by default.
 If you want to manipulate pane which is not instance of TextEdior(e.g. settings-view), you need to set keymap on `atom-workspace` not on `atom-text-editor`.
 
 ```coffeescript
-'atom-text-editor.vim-mode.command-mode':
+'atom-text-editor.vim-mode.normal-mode':
   'ctrl-w x':     'paner:swap-item'
   'ctrl-w X':     'paner:send-item'
   'ctrl-w enter': 'paner:maximize'

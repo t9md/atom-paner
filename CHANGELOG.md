@@ -1,3 +1,6 @@
+## 0.1.10
+- Update readme to follow vim-mode's command-mode to normal-mode
+
 ## 0.1.9 FIX
 - `merge-item` bug.
 - Refactoring
