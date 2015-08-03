@@ -1,3 +1,6 @@
+## 0.1.11
+- Add paner:split command to split pane with keeping scrollTop.
+
 ## 0.1.10
 - Update readme to follow vim-mode's command-mode to normal-mode
 

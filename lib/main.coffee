@@ -30,6 +30,11 @@ module.exports =
       'paner:very-left':   => @very 'left'
       'paner:very-right':  => @very 'right'
 
+      'paner:split-up':    => @split 'up'
+      'paner:split-down':  => @split 'down'
+      'paner:split-right': => @split 'right'
+      'paner:split-left':  => @split 'left'
+
   deactivate: ->
     @subscriptions.dispose()
     Pane     = null
@@ -42,6 +47,46 @@ module.exports =
 
     @subscriptions.add @getActivePane().onDidChangeActive ->
       workspaceElement.classList.remove('paner-maximize')
+
+  _split: (direction) ->
+    atom.workspace.getActivePane()["split#{_.capitalize(direction)}"](copyActiveItem: true)
+
+  split: (direction) ->
+    switch direction
+      when 'right', 'left'
+        scrollTop = atom.workspace.getActiveTextEditor()?.getScrollTop()
+        @_split direction
+        if scrollTop?
+          atom.workspace.getActiveTextEditor().setScrollTop(scrollTop)
+      when 'up', 'down'
+        # When cursor position is half bottom of pane, it will be hidden after
+        # vertical split. In that case we adjust screenTop to keeping RATIO of original
+        # cursor position against originalScreenTop.
+        direction = _.capitalize(direction)
+        unless srcEditor = atom.workspace.getActiveTextEditor()
+          @_split direction
+          return
+
+        srcEditorElement = atom.views.getView(srcEditor)
+        point = srcEditor.getCursorBufferPosition()
+        px = srcEditorElement.pixelPositionForBufferPosition(point)
+        scrollTop = srcEditor.getScrollTop()
+
+        oldHeight = srcEditor.getHeight()
+        offsetFromScrollTop = px.top - scrollTop
+
+        @_split direction
+
+        newEditor = atom.workspace.getActiveTextEditor()
+        newHeight = newEditor.getHeight()
+
+        if px.top < ((scrollTop + newHeight) - srcEditor.getLineHeightInPixels())
+          newEditor.setScrollTop(scrollTop)
+        else
+          # will be hidden unless adjust screenTop
+          newScrollTop = px.top - (offsetFromScrollTop * (newHeight / oldHeight))
+          srcEditor.setScrollTop(newScrollTop)
+          newEditor.setScrollTop(newScrollTop)
 
   # Get nearest pane within current PaneAxis.
   #  * Choose next Pane if exists.

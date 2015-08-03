@@ -15,15 +15,16 @@ Automatically exit Maximized mode if Active Pane changed.
 
 * VERY-top: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
 
+* Split with keeping screenTop of original activePaneItem.
+
 # How to use
 
 * `paner:swap-item` to swap PaneItem with adjacent PaneItem.
 * `paner:send-item` to send active PaneItem to adjacent Pane.
 * `paner:maximize` to Maximize or de-Maximize current PaneItem.
 * `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
-
 * `paner:merge-item` same as `paner:send-item` but it activate sent item.
-
+* `paner:split-up` and its friends: similar to Atom's `pane:split-up` but keep original screenTop so that you don't lose sight of cursor position just after split.
 
 # NOTE
 
@@ -46,6 +47,11 @@ No keymap by default.
   'cmd-k cmd-down':  'paner:very-bottom'
   'cmd-k cmd-left':  'paner:very-left'
   'cmd-k cmd-right': 'paner:very-right'
+
+  'cmd-k up':    'paner:split-up'
+  'cmd-k down':  'paner:split-down'
+  'cmd-k left':  'paner:split-left'
+  'cmd-k right': 'paner:split-right'
 ```
 
 * [vim-mode](https://atom.io/packages/vim-mode) user.
@@ -61,6 +67,8 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
   'ctrl-w J':     'paner:very-bottom'
   'ctrl-w H':     'paner:very-left'
   'ctrl-w L':     'paner:very-right'
+  'ctrl-w s':     'paner:split-up'
+  'ctrl-w v':     'paner:split-left'
 ```
 
 * Mine.
@@ -74,4 +82,6 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
   'cmd-J':     'paner:very-bottom'
   'cmd-H':     'paner:very-left'
   'cmd-L':     'paner:very-right'
+  'cmd-2':     'paner:split-up'
+  'cmd-3':     'paner:split-left'
 ```

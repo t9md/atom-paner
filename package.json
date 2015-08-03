@@ -12,7 +12,11 @@
       "paner:very-top",
       "paner:very-bottom",
       "paner:very-left",
-      "paner:very-right"
+      "paner:very-right",
+      "paner:split-up",
+      "paner:split-down",
+      "paner:split-right",
+      "paner:split-left"
     ]
   },
   "repository": "https://github.com/t9md/atom-paner",
