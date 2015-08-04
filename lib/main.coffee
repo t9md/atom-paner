@@ -65,30 +65,31 @@ module.exports =
 
         pane = @getActivePane()
         editor = pane.getActiveEditor()
-        oldHeight = editor.getHeight()
-        @_split pane, direction
-        return unless editor
+        unless editor
+          @_split pane, direction
+          return
 
-        scrollTop = editor.getScrollTop()
-        point = editor.getCursorBufferPosition()
-        cursorPixel = atom.views.getView(editor).pixelPositionForBufferPosition(point).top
+        scrollTop   = editor.getScrollTop()
+        point       = editor.getCursorScreenPosition()
+        cursorPixel = atom.views.getView(editor).pixelPositionForScreenPosition(point).top
+        ratio       = (cursorPixel - scrollTop) / editor.getHeight()
+
+        @_split pane, direction
 
         newEditor = atom.workspace.getActiveTextEditor()
-        ratio = (cursorPixel - scrollTop) / oldHeight
         newHeight = newEditor.getHeight()
-        scrollTop = cursorPixel - (newHeight * ratio)
 
+        scrolloff = 2
+        lineHeightPixel = editor.getLineHeightInPixels()
 
-        # scrolloff = 2
-        # offset = editor.getLineHeightInPixels() * (scrolloff + 1)
-        # bottomBorder = (scrollTop + newHeight) - offset
-        # console.log [bottomBorder, newScrollTop]
-        # scrollTop = Math.min(bottomBorder, newScrollTop)
+        topBorder    = cursorPixel - (lineHeightPixel * scrolloff)
+        bottomBorder = cursorPixel - newHeight + (lineHeightPixel * (scrolloff+1))
+        scrollTop    = cursorPixel - (newHeight * ratio)
 
+        scrollTop = Math.min(scrollTop, topBorder)
+        scrollTop = Math.max(scrollTop, bottomBorder)
         editor.setScrollTop(scrollTop)
         newEditor.setScrollTop(scrollTop)
-
-
 
   # Get nearest pane within current PaneAxis.
   #  * Choose next Pane if exists.
