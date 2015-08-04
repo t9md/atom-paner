@@ -62,20 +62,32 @@ module.exports =
         # When cursor position is half bottom of pane, it will be hidden after
         # vertical split. In that case we adjust screenTop to keeping RATIO of original
         # cursor position against originalScreenTop.
+
         pane = @getActivePane()
+        editor = pane.getActiveEditor()
+        oldHeight = editor.getHeight()
         @_split pane, direction
-        return unless editor = pane.getActiveEditor()
+        return unless editor
 
         scrollTop = editor.getScrollTop()
-        newEditor = atom.workspace.getActiveTextEditor()
-        bottomPixel = scrollTop + newEditor.getHeight() - editor.getLineHeightInPixels()
         point = editor.getCursorBufferPosition()
         cursorPixel = atom.views.getView(editor).pixelPositionForBufferPosition(point).top
 
-        if cursorPixel > bottomPixel # will be hidden unless adjust.
-          scrollTop = scrollTop + (cursorPixel - scrollTop) / 2
-          editor.setScrollTop(scrollTop)
+        newEditor = atom.workspace.getActiveTextEditor()
+        ratio = (cursorPixel - scrollTop) / oldHeight
+        newHeight = newEditor.getHeight()
+        scrollTop = cursorPixel - (newHeight * ratio)
+
+
+        # scrolloff = 2
+        # offset = editor.getLineHeightInPixels() * (scrolloff + 1)
+        # bottomBorder = (scrollTop + newHeight) - offset
+        # console.log [bottomBorder, newScrollTop]
+        # scrollTop = Math.min(bottomBorder, newScrollTop)
+
+        editor.setScrollTop(scrollTop)
         newEditor.setScrollTop(scrollTop)
+
 
 
   # Get nearest pane within current PaneAxis.
