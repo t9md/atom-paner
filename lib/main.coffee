@@ -59,13 +59,8 @@ module.exports =
         if editor = pane.getActiveEditor()
           atom.workspace.getActiveTextEditor().setScrollTop(editor.getScrollTop())
       when 'up', 'down'
-        # When cursor position is half bottom of pane, it will be hidden after
-        # vertical split. In that case we adjust screenTop to keeping RATIO of original
-        # cursor position against originalScreenTop.
-
         pane = @getActivePane()
-        editor = pane.getActiveEditor()
-        unless editor
+        unless editor = pane.getActiveEditor()
           @_split pane, direction
           return
 
@@ -82,12 +77,10 @@ module.exports =
         scrolloff = 2
         lineHeightPixel = editor.getLineHeightInPixels()
 
-        topBorder    = cursorPixel - (lineHeightPixel * scrolloff)
-        bottomBorder = cursorPixel - newHeight + (lineHeightPixel * (scrolloff+1))
-        scrollTop    = cursorPixel - (newHeight * ratio)
-
-        scrollTop = Math.min(scrollTop, topBorder)
-        scrollTop = Math.max(scrollTop, bottomBorder)
+        offsetTop    = lineHeightPixel * scrolloff
+        offsetBottom = newHeight - lineHeightPixel * (scrolloff+1)
+        offsetCursor = newHeight * ratio
+        scrollTop    = cursorPixel - Math.min(Math.max(offsetCursor, offsetTop), offsetBottom)
         editor.setScrollTop(scrollTop)
         newEditor.setScrollTop(scrollTop)
 

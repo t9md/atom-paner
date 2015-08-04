@@ -1,3 +1,6 @@
+## 0.1.12
+- Now `paner:split-right, left`, always respect ratio and scroll offset.
+
 ## 0.1.11
 - Add paner:split command to split pane with keeping scrollTop.
 
