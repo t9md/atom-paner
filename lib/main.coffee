@@ -25,6 +25,7 @@ module.exports =
       'paner:swap-item':   => @swapItem()
       'paner:merge-item':  => @mergeItem activate: true
       'paner:send-item':   => @mergeItem activate: false
+
       'paner:very-top':    => @very 'top'
       'paner:very-bottom': => @very 'bottom'
       'paner:very-left':   => @very 'left'

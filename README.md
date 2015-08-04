@@ -15,7 +15,7 @@ Automatically exit Maximized mode if Active Pane changed.
 
 * VERY-top: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
 
-* Split with keeping screenTop of original activePaneItem.
+* Split with synching scroll state of original paneItem.
 
 # How to use
 
@@ -24,7 +24,7 @@ Automatically exit Maximized mode if Active Pane changed.
 * `paner:maximize` to Maximize or de-Maximize current PaneItem.
 * `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
 * `paner:merge-item` same as `paner:send-item` but it activate sent item.
-* `paner:split-up` and its friends: similar to Atom's `pane:split-up` but keep original screenTop so that you don't lose sight of cursor position just after split.
+* `paner:split-up` and its friends: similar to Atom's `pane:split-up` but it sync scroll state to original item so that you don't lose sight of cursor position after split.
 
 # NOTE
 
