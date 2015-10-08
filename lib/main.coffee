@@ -50,15 +50,15 @@ module.exports =
       workspaceElement.classList.remove('paner-maximize')
 
   _split: (pane, direction) ->
-    pane["split#{_.capitalize(direction)}"](copyActiveItem: true)
+    pane["split#{_.capitalize(direction)}"](copyActiveItem: true, activate: false)
 
   split: (direction) ->
     switch direction
       when 'right', 'left'
         pane = @getActivePane()
-        @_split pane, direction
+        newPane = @_split pane, direction
         if editor = pane.getActiveEditor()
-          atom.workspace.getActiveTextEditor().setScrollTop(editor.getScrollTop())
+          newPane.getActiveItem().setScrollTop(editor.getScrollTop())
       when 'up', 'down'
         pane = @getActivePane()
         unless editor = pane.getActiveEditor()
@@ -70,9 +70,9 @@ module.exports =
         cursorPixel = atom.views.getView(editor).pixelPositionForScreenPosition(point).top
         ratio       = (cursorPixel - scrollTop) / editor.getHeight()
 
-        @_split pane, direction
+        newPane = @_split pane, direction
 
-        newEditor = atom.workspace.getActiveTextEditor()
+        newEditor = newPane.getActiveEditor()
         newHeight = newEditor.getHeight()
 
         scrolloff = 2
