@@ -38,7 +38,7 @@ Automatically exit Maximized mode if Active Pane changed.
 
 ## split
 
-* `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor position.
+* `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor.
 * `paner:split-down`: Keep scroll state for newly opened editor.
 * `paner:split-right`: Keep scroll state for newly opened editor.
 * `paner:split-left`: Keep scroll state for newly opened editor.
