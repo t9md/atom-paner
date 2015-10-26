@@ -19,21 +19,25 @@ Automatically exit Maximized mode if Active Pane changed.
 
 # Commands
 
-pane item manipulation
+## pane item manipulation
+
 * `paner:swap-item`: Swap PaneItem with adjacent PaneItem.
 * `paner:send-item`: Send active PaneItem to adjacent Pane.
 * `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
 
-zen-mode
+## zen-mode
+
 * `paner:maximize`: Maximize or unMaximize current pane item.
 
-move pane
+## move pane
+
 * `paner:very-top`: Move current pane to very top.
 * `paner:very-bottom`: Move current pane to very bottom.
 * `paner:very-right`: Move current pane to very right.
 * `paner:very-left`: Move current pane to very left.
 
-split
+## split
+
 * `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor position.
 * `paner:split-down`: Keep scroll state for newly opened editor.
 * `paner:split-right`: Keep scroll state for newly opened editor.
