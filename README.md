@@ -6,23 +6,18 @@ Missing pane manipulation utilities.
 
 # Feature
 
-* Swap PaneItem: Exchange PaneItem with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
-
-* Send PaneItem: Send active PaneItem to adjacent PaneItem.
-
+* Swap pane item with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
 * Maximize: Maximize pane. Well know as **Zen mode**.
 Automatically exit Maximized mode if Active Pane changed.
-
 * move to VERY top/bottom/right/left: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
-
-* Split with synching scroll state of original paneItem.
+* Split with synching scroll state of original pane item.
 
 # Commands
 
 ## pane item manipulation
 
-* `paner:swap-item`: Swap PaneItem with adjacent PaneItem.
-* `paner:send-item`: Send active PaneItem to adjacent Pane.
+* `paner:swap-item`: Swap item with adjacent pane's.
+* `paner:send-item`: Send active item to adjacent Pane.
 * `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
 
 ## zen-mode
@@ -101,5 +96,5 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 
 From atom 0.206.0, PreviewTab feature is introduces.  
 If user enabled this feature, tab not modified or dblclicked is treated as preview, temporary tab which is replaced when opening another file.  
-This tab characteristic don't well work with paner since is move tab(paneItem) from pane to pane.  
+This tab characteristic don't well work with paner since is move tab(pane item) from pane to pane.  
 To workaround this, paner reset preview state of tab for the pane which is subject to manipulation. See [#1](https://github.com/t9md/atom-paner/issues/1).  
