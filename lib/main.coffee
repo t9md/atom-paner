@@ -91,8 +91,8 @@ module.exports =
       subs.dispose()
 
   getCursorPositionInfo: (editor) ->
-    point = editor.getCursorScreenPosition()
     editorElement = atom.views.getView(editor)
+    point = editor.getCursorScreenPosition()
     pixelTop = editorElement.pixelPositionForScreenPosition(point).top
     ratio = (pixelTop - editor.getScrollTop()) / editor.getHeight()
     {pixelTop, ratio}
@@ -103,11 +103,9 @@ module.exports =
 
     options = null
     options = @getCursorPositionInfo(editor) if direction in ['up', 'down']
-
     newPane = splitPane(oldPane, direction)
     if editor?
       @emitter.emit 'did-pane-split', {oldPane, newPane, direction, options}
-
 
   swapItem: ->
     currentPane = getActivePane()

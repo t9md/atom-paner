@@ -8,7 +8,6 @@ getVisibleBufferRowRange = (e) ->
 
 describe "paner", ->
   [main, view, workspaceElement] = []
-  # [editor, editorElement] = []
   [pathSample1, pathSample2] = []
 
   dispatchCommand = (command) ->
@@ -18,16 +17,16 @@ describe "paner", ->
     spec.addMatchers
       toHaveSampeParent: (expected) ->
         @actual.getParent() is expected.getParent()
+
       toHaveScrollTop: (expected) ->
         @actual.getScrollTop() is expected
+
       toHaveVisibleBufferRowRange: (expected) ->
         _.isEqual(getVisibleBufferRowRange(@actual), expected)
 
-      # toHaveOrientation: (expected) ->
-      #   @actual.getOrientation() is expected
-
   beforeEach ->
     addCustomMatchers(this)
+
     activationPromise = null
     runs ->
       workspaceElement = atom.views.getView(atom.workspace)
@@ -119,9 +118,7 @@ describe "paner", ->
 
       runs ->
         scroll(editor)
-        # console.log editor.getScrollTop()
         editor.setCursorBufferPosition [16, 0]
-        # console.log getVisibleBufferRowRange(editor)
 
     describe "split up/down", ->
       [newPane, oldPane, originalScrollTop] = []
@@ -177,7 +174,158 @@ describe "paner", ->
           expect(atom.workspace.getPanes()).toEqual [oldPane, newPane]
 
   describe "moveToVery direction", ->
-    describe "very-top", ->
-    describe "very-bottom", ->
-    describe "very-left", ->
-    describe "very-right", ->
+    [p1, p2, p3] = []
+    [f1, f2, f3] = []
+    split = (direction) ->
+      e = atom.workspace.getActiveTextEditor()
+      el = atom.views.getView(e)
+      atom.commands.dispatch(el, "pane:split-#{direction}")
+
+    getPanePaths = ->
+      atom.workspace.getPanes().map((p) -> p.getActiveItem().getPath())
+
+    getPaneOrientations = ->
+      atom.workspace.getPanes().map((p) -> p.getParent().getOrientation())
+
+    expectPanePaths = ({active, command, paths, orientaions}) ->
+      active.activate()
+      dispatchCommand(command)
+      expect(getPanePaths()).toEqual paths
+      if orientaions?
+        expect(getPaneOrientations()).toEqual orientaions
+
+    beforeEach ->
+      f1 = atom.project.resolvePath("file1")
+      f2 = atom.project.resolvePath("file2")
+      f3 = atom.project.resolvePath("file3")
+
+    describe "all horizontal", ->
+      beforeEach ->
+        waitsForPromise -> atom.workspace.open(f1)
+        runs -> split('right')
+        waitsForPromise -> atom.workspace.open(f2)
+        runs -> split('right')
+        waitsForPromise -> atom.workspace.open(f3)
+
+        runs ->
+          panes = atom.workspace.getPanes()
+          expect(panes).toHaveLength 3
+          [p1, p2, p3] = panes
+          expect(p1.getParent().getOrientation()).toBe 'horizontal'
+          expect(atom.workspace.getActivePane()).toBe p3
+          expect(getPanePaths()).toEqual [f1, f2, f3]
+
+      describe "very-top", ->
+        command = 'very-top'
+        orientations = ['vertical', 'horizontal', 'horizontal']
+        describe "when p1 is active", ->
+          it "move to very top", ->
+            expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
+        describe "when p2 is active", ->
+          it "move to very top", ->
+            expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
+        describe "when p3 is active", ->
+          it "move to very top", ->
+            expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
+
+      describe "very-bottom", ->
+        command = 'very-bottom'
+        orientations = ['horizontal', 'horizontal', 'vertical']
+        describe "when p1 is active", ->
+          it "move to very bottom", ->
+            expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
+        describe "when p2 is active", ->
+          it "move to very bottom", ->
+            expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
+        describe "when p3 is active", ->
+          it "move to very bottom", ->
+            expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
+
+      describe "very-left", ->
+        command = 'very-left'
+        describe "when p1 is active", ->
+          it "move to very left", ->
+            expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
+        describe "when p2 is active", ->
+          it "move to very left", ->
+            expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
+        describe "when p3 is active", ->
+          it "move to very left", ->
+            expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
+
+      describe "very-right", ->
+        command = 'very-right'
+        describe "when p1 is active", ->
+          it "move to very right", ->
+            expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
+        describe "when p2 is active", ->
+          it "move to very right", ->
+            expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
+        describe "when p3 is active", ->
+          it "move to very right", ->
+            expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
+
+    describe "all vertical", ->
+      beforeEach ->
+        waitsForPromise -> atom.workspace.open(f1)
+        runs -> split('down')
+        waitsForPromise -> atom.workspace.open(f2)
+        runs -> split('down')
+        waitsForPromise -> atom.workspace.open(f3)
+
+        runs ->
+          panes = atom.workspace.getPanes()
+          expect(panes).toHaveLength 3
+          [p1, p2, p3] = panes
+          expect(p1.getParent().getOrientation()).toBe 'vertical'
+          expect(atom.workspace.getActivePane()).toBe p3
+          expect(getPanePaths()).toEqual [f1, f2, f3]
+
+      describe "very-top", ->
+        command = 'very-top'
+        describe "when p1 is active", ->
+          it "move to very top", ->
+            expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
+        describe "when p2 is active", ->
+          it "move to very top", ->
+            expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
+        describe "when p3 is active", ->
+          it "move to very top", ->
+            expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
+      describe "very-bottom", ->
+        command = 'very-bottom'
+        describe "when p1 is active", ->
+          it "move to very bottom", ->
+            expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
+        describe "when p2 is active", ->
+          it "move to very bottom", ->
+            expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
+        describe "when p3 is active", ->
+          it "move to very bottom", ->
+            expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
+
+      describe "very-left", ->
+        command = 'very-left'
+        orientations = ['horizontal', 'vertical', 'vertical']
+        describe "when p1 is active", ->
+          it "move to very left", ->
+            expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
+        describe "when p2 is active", ->
+          it "move to very left", ->
+            expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
+        describe "when p3 is active", ->
+          it "move to very left", ->
+            expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
+
+      describe "very-right", ->
+        command = 'very-right'
+        orientations = ['horizontal', 'vertical', 'vertical']
+        describe "when p1 is active", ->
+          it "move to very right", ->
+            expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
+        describe "when p2 is active", ->
+          it "move to very right", ->
+            expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
+        describe "when p3 is active", ->
+          it "move to very right", ->
+            expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
