@@ -17,26 +17,33 @@ Automatically exit Maximized mode if Active Pane changed.
 
 * Split with synching scroll state of original paneItem.
 
-# How to use
+# Commands
 
-* `paner:swap-item` to swap PaneItem with adjacent PaneItem.
-* `paner:send-item` to send active PaneItem to adjacent Pane.
-* `paner:merge-item` same as `paner:send-item` but it activate sent item.
-* `paner:maximize` to Maximize or de-Maximize current PaneItem.
-* `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
-* `paner:split-up` and its friends: similar to Atom's `pane:split-up` but it sync scroll state to original item so that you don't lose sight of cursor position after split.
+pane item manipulation
+* `paner:swap-item`: Swap PaneItem with adjacent PaneItem.
+* `paner:send-item`: Send active PaneItem to adjacent Pane.
+* `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
 
-# NOTE
+zen-mode
+* `paner:maximize`: Maximize or unMaximize current pane item.
 
-From atom 0.206.0, PreviewTab feature is introduces.  
-If user enabled this feature, tab not modified or dblclicked is treated as preview, temporary tab which is replaced when opening another file.  
-This tab characteristic don't well work with paner since is move tab(paneItem) from pane to pane.  
-To workaround this, paner manually clear(or reset) preview state of tab for the pane which is subject to manipulation. See [#1](https://github.com/t9md/atom-paner/issues/1).  
+move pane
+* `paner:very-top`: Move current pane to very top.
+* `paner:very-bottom`: Move current pane to very bottom.
+* `paner:very-right`: Move current pane to very right.
+* `paner:very-left`: Move current pane to very left.
 
-# Keymap
-No keymap by default.
+split
+* `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor position.
+* `paner:split-down`: Keep scroll state for newly opened editor.
+* `paner:split-right`: Keep scroll state for newly opened editor.
+* `paner:split-left`: Keep scroll state for newly opened editor.
 
-* For everyone.
+# Keymap example.
+
+No default keymap.
+
+* For normal user.
 
 ```coffeescript
 'atom-workspace:not([mini])':
@@ -85,3 +92,10 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
   'cmd-2':     'paner:split-up'
   'cmd-3':     'paner:split-left'
 ```
+
+# Misc
+
+From atom 0.206.0, PreviewTab feature is introduces.  
+If user enabled this feature, tab not modified or dblclicked is treated as preview, temporary tab which is replaced when opening another file.  
+This tab characteristic don't well work with paner since is move tab(paneItem) from pane to pane.  
+To workaround this, paner reset preview state of tab for the pane which is subject to manipulation. See [#1](https://github.com/t9md/atom-paner/issues/1).  
