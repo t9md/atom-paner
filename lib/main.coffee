@@ -1,4 +1,4 @@
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Emitter} = require 'atom'
 {
   debug
   getActivePane
@@ -37,6 +37,7 @@ module.exports =
     @subscriptions = new CompositeDisposable
     @workspaceElement = atom.views.getView(atom.workspace)
     Pane = atom.workspace.getActivePane().constructor
+    @emitter = new Emitter
 
     @subscriptions.add atom.commands.add 'atom-workspace',
       'paner:maximize':    => @maximize()
@@ -54,9 +55,33 @@ module.exports =
       'paner:very-left':   => @moveToVery 'left'
       'paner:very-right':  => @moveToVery 'right'
 
+    @onDidPaneSplit ({oldPane, newPane, direction, options}) ->
+      oldEditor = oldPane.getActiveEditor()
+      newEditor = newPane.getActiveEditor()
+      switch direction
+        when 'right', 'left'
+          newEditor.setScrollTop(oldEditor.getScrollTop())
+
+        when 'up', 'down'
+          {pixelTop, ratio} = options
+          newHeight = newEditor.getHeight()
+          scrolloff = 2
+          lineHeightInPixels = oldEditor.getLineHeightInPixels()
+
+          offsetTop    = lineHeightInPixels * scrolloff
+          offsetBottom = newHeight - lineHeightInPixels * (scrolloff+1)
+          offsetCursor = newHeight * ratio
+          scrollTop = pixelTop - Math.min(Math.max(offsetCursor, offsetTop), offsetBottom)
+
+          oldEditor.setScrollTop(scrollTop)
+          newEditor.setScrollTop(scrollTop)
+
   deactivate: ->
     @subscriptions.dispose()
     {Pane, PaneAxis, @workspaceElement} = {}
+
+  onDidPaneSplit: (callback) ->
+    @emitter.on 'did-pane-split', callback
 
   # Simply add/remove css class, actual maximization effect is done by CSS.
   maximize: ->
@@ -73,34 +98,16 @@ module.exports =
     {pixelTop, ratio}
 
   split: (direction) ->
-    pane = getActivePane()
-    editor = pane.getActiveEditor()
-    switch direction
-      when 'right', 'left'
-        newPane = splitPane(pane, direction)
-        if editor?
-          newEditor = newPane.getActiveEditor()
-          newEditor.setScrollTop(editor.getScrollTop())
-      when 'up', 'down'
-        unless editor?
-          splitPane(pane, direction)
-          return
+    oldPane = getActivePane()
+    editor = oldPane.getActiveEditor()
 
-        {pixelTop, ratio} = @getCursorPositionInfo(editor)
-        newPane = splitPane(pane, direction)
-        newEditor = newPane.getActiveEditor()
-        newHeight = newEditor.getHeight()
+    options = null
+    options = @getCursorPositionInfo(editor) if direction in ['up', 'down']
 
-        scrolloff = 2
-        lineHeightPixel = editor.getLineHeightInPixels()
+    newPane = splitPane(oldPane, direction)
+    if editor?
+      @emitter.emit 'did-pane-split', {oldPane, newPane, direction, options}
 
-        offsetTop    = lineHeightPixel * scrolloff
-        offsetBottom = newHeight - lineHeightPixel * (scrolloff+1)
-        offsetCursor = newHeight * ratio
-        scrollTop = pixelTop - Math.min(Math.max(offsetCursor, offsetTop), offsetBottom)
-
-        editor.setScrollTop(scrollTop)
-        newEditor.setScrollTop(scrollTop)
 
   swapItem: ->
     currentPane = getActivePane()

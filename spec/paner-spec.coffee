@@ -1,6 +1,10 @@
-# _path = require 'path'
+_ = require 'underscore-plus'
 
 {setConfig, getPath, addProject, openFile} = require './spec-helper'
+
+getVisibleBufferRowRange = (e) ->
+  e.getVisibleRowRange().map (row) ->
+    e.bufferRowForScreenRow row
 
 describe "paner", ->
   [main, view, workspaceElement] = []
@@ -12,24 +16,30 @@ describe "paner", ->
 
   addCustomMatchers = (spec) ->
     spec.addMatchers
-      # toBeEqualItem: (expected) ->
-      #   line1 = @actual.find('div').eq(0).text()
-      #   line2 = @actual.find('div').eq(1).text()
-      #   (line1 is _path.basename(expected)) and (line2 is getPath(expected, true))
+      toHaveSampeParent: (expected) ->
+        @actual.getParent() is expected.getParent()
+      toHaveScrollTop: (expected) ->
+        @actual.getScrollTop() is expected
+      toHaveVisibleBufferRowRange: (expected) ->
+        _.isEqual(getVisibleBufferRowRange(@actual), expected)
+
+      # toHaveOrientation: (expected) ->
+      #   @actual.getOrientation() is expected
 
   beforeEach ->
-    # addCustomMatchers(this)
-    workspaceElement = atom.views.getView(atom.workspace)
-    pathSample1 = atom.project.resolvePath "sample-1.coffee"
-    pathSample2 = atom.project.resolvePath "sample-2.coffee"
-    jasmine.attachToDOM(workspaceElement)
+    addCustomMatchers(this)
     activationPromise = null
     runs ->
+      workspaceElement = atom.views.getView(atom.workspace)
+      pathSample1 = atom.project.resolvePath "sample-1.coffee"
+      pathSample2 = atom.project.resolvePath "sample-2.coffee"
+      jasmine.attachToDOM(workspaceElement)
       activationPromise = atom.packages.activatePackage('paner').then (pack) ->
         main = pack.mainModule
       dispatchCommand('swap-item')
 
-    waitsForPromise -> activationPromise
+    waitsForPromise ->
+      activationPromise
 
   describe "paner:maximize", ->
     describe "when maximized", ->
@@ -83,48 +93,88 @@ describe "paner", ->
         expect(atom.workspace.getActivePane()).toBe paneR
 
   describe "split", ->
-    [editor, editorElement, pathSample] = []
-    lineHeightPx = 10
-    rowsPerPage = 10
-    scroll = (editor) ->
-      editor.setScrollTop(editor.getScrollTop() + editor.getHeight())
+    [editor, editorElement, pathSample, subs, newEditor] = []
 
-    getVisibleBufferRowRange = (editor) ->
-      editor.getVisibleRowRange().map (row) ->
-        editor.bufferRowForScreenRow row
+    scroll = (e) ->
+      e.setScrollTop(e.getHeight())
+
+    rowsPerPage = 10
+    setEditorProperties = (e) ->
+      e.setLineHeightInPixels(lineHeightInPixels)
+      e.setHeight(rowsPerPage * lineHeightInPixels)
+
+    setRowsPerPage = (e, num) ->
+      e.setHeight(num * e.getLineHeightInPixels())
+
+    onDidSplit = (fn) ->
+      main.emitter.preempt 'did-pane-split', fn
 
     beforeEach ->
       pathSample = atom.project.resolvePath("sample")
       waitsForPromise ->
         atom.workspace.open(pathSample).then (e) ->
           editor = e
-          editor.setLineHeightInPixels(lineHeightPx)
-          editor.setHeight(rowsPerPage * lineHeightPx)
+          setRowsPerPage(editor, rowsPerPage)
           editorElement = atom.views.getView(editor)
+
       runs ->
         scroll(editor)
+        # console.log editor.getScrollTop()
         editor.setCursorBufferPosition [16, 0]
-        expect(getVisibleBufferRowRange(editor)).toEqual [10, 19]
+        # console.log getVisibleBufferRowRange(editor)
 
-    describe "split-up", ->
-      # dispatchCommand('split-up')
-    describe "split-down", ->
-    describe "split-left", ->
-      it "split-left with keeping scroll ratio", ->
-        # dispatchCommand('split-left')
-        # expect(getVisibleBufferRowRange(editor)).toEqual [10, 19]
-        # panes = atom.workspace.getPanes()
-        # expect(panes).toHaveLength 2
-        # [paneL, paneR] = panes
-        # expect(paneR.getItems()).toEqual [editor]
-        # expect(paneL.getItems()).toHaveLength 1
-        # newItem = paneL.getActiveItem()
-        # expect(newItem.getPath()).toBe pathSample
-        # expect(getVisibleBufferRowRange(editor)).toEqual [10, 19]
-        # expect(getVisibleBufferRowRange(newItem)).toEqual [10, 19]
-        # expect(atom.workspace.getActivePane()).toBe paneL
+    describe "split up/down", ->
+      [newPane, oldPane, originalScrollTop] = []
+      beforeEach ->
+        originalScrollTop = editor.getScrollTop()
+        onDidSplit (args) ->
+          {newPane, oldPane} = args
+          newEditor = newPane.getActiveEditor()
+          setRowsPerPage(newEditor, rowsPerPage/2)
 
-    describe "split-right", ->
+      afterEach ->
+        expect(newPane).toHaveSampeParent(oldPane)
+        expect(newPane.getParent().getOrientation()).toBe 'vertical'
+        expect(editor).toHaveScrollTop newEditor.getScrollTop()
+        expect(newEditor).toHaveVisibleBufferRowRange [14, 18]
+
+      describe "split-up", ->
+        it "split-up with keeping scroll ratio", ->
+          dispatchCommand('split-up')
+          setRowsPerPage(editor, rowsPerPage/2)
+          expect(atom.workspace.getPanes()).toEqual [newPane, oldPane]
+
+      describe "split-down", ->
+        it "split-down with keeping scroll ratio", ->
+          dispatchCommand('split-down')
+          setRowsPerPage(editor, rowsPerPage/2)
+          expect(atom.workspace.getPanes()).toEqual [oldPane, newPane]
+
+    describe "split left/right", ->
+      [newPane, oldPane, originalScrollTop] = []
+      beforeEach ->
+        originalScrollTop = editor.getScrollTop()
+        onDidSplit (args) ->
+          {newPane, oldPane} = args
+          newEditor = newPane.getActiveEditor()
+          setRowsPerPage(newEditor, rowsPerPage)
+
+      afterEach ->
+        expect(newPane).toHaveSampeParent(oldPane)
+        expect(newPane.getParent().getOrientation()).toBe 'horizontal'
+        expect(editor).toHaveScrollTop newEditor.getScrollTop()
+        expect(editor).toHaveScrollTop originalScrollTop
+        expect(editor).toHaveVisibleBufferRowRange [10, 19]
+
+      describe "split left", ->
+        it "split-left with keeping scroll ratio", ->
+          dispatchCommand('split-left')
+          expect(atom.workspace.getPanes()).toEqual [newPane, oldPane]
+
+      describe "split-right", ->
+        it "split-right with keeping scroll ratio", ->
+          dispatchCommand('split-right')
+          expect(atom.workspace.getPanes()).toEqual [oldPane, newPane]
 
   describe "moveToVery direction", ->
     describe "very-top", ->

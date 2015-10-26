@@ -8,9 +8,8 @@ debug = (msg) ->
   console.log msg
 
 splitPane = (pane, direction) ->
-  options = {copyActiveItem: true, activate: false}
   method = "split#{_.capitalize(direction)}"
-  pane[method](options)
+  pane[method]({copyActiveItem: true, activate: false})
 
 resetPreviewStateForPane = (pane) ->
   paneElement = atom.views.getView(pane)
