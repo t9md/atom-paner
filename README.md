@@ -1,6 +1,6 @@
 # Paner [![Build Status](https://travis-ci.org/t9md/atom-paner.svg)](https://travis-ci.org/t9md/atom-paner)
 
-Missing pane manipulation helpers.
+Missing pane manipulation utilities.
 
 ![gif](https://raw.githubusercontent.com/t9md/t9md/4407eb697d1f83a8ce6a16ce096a98a270980c3b/img/atom-paner.gif)
 
@@ -13,7 +13,7 @@ Missing pane manipulation helpers.
 * Maximize: Maximize pane. Well know as **Zen mode**.
 Automatically exit Maximized mode if Active Pane changed.
 
-* VERY-top: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
+* move to VERY top/bottom/right/left: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
 
 * Split with synching scroll state of original paneItem.
 
@@ -21,9 +21,9 @@ Automatically exit Maximized mode if Active Pane changed.
 
 * `paner:swap-item` to swap PaneItem with adjacent PaneItem.
 * `paner:send-item` to send active PaneItem to adjacent Pane.
+* `paner:merge-item` same as `paner:send-item` but it activate sent item.
 * `paner:maximize` to Maximize or de-Maximize current PaneItem.
 * `paner:very-top`, `paner:very-bottom`, `paner:very-right`, `paner:very-left` to move current Pane to very far direction.
-* `paner:merge-item` same as `paner:send-item` but it activate sent item.
 * `paner:split-up` and its friends: similar to Atom's `pane:split-up` but it sync scroll state to original item so that you don't lose sight of cursor position after split.
 
 # NOTE

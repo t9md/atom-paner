@@ -1,3 +1,7 @@
+## 0.1.13
+- Refactoring
+- Add spec
+
 ## 0.1.12
 - Now `paner:split-right, left`, always respect ratio and scroll offset.
 
