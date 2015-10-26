@@ -1,4 +1,4 @@
-# Paner
+# Paner [![Build Status](https://travis-ci.org/t9md/atom-paner.svg)](https://travis-ci.org/t9md/atom-paner)
 
 Missing pane manipulation helpers.
 
