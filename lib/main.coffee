@@ -56,7 +56,7 @@ module.exports =
       'paner:very-right':  => @moveToVery 'right'
 
     @onDidPaneSplit ({oldPane, newPane, direction, options}) ->
-      oldEditor = oldPane.getActiveEditor()
+      return unless oldEditor = oldPane.getActiveEditor()
       newEditor = newPane.getActiveEditor()
       switch direction
         when 'right', 'left'
@@ -99,13 +99,13 @@ module.exports =
 
   split: (direction) ->
     oldPane = getActivePane()
-    editor = oldPane.getActiveEditor()
+    editor =
 
     options = null
-    options = @getCursorPositionInfo(editor) if direction in ['up', 'down']
+    if direction in ['up', 'down']
+      options = @getCursorPositionInfo(oldPane.getActiveEditor())
     newPane = splitPane(oldPane, direction)
-    if editor?
-      @emitter.emit 'did-pane-split', {oldPane, newPane, direction, options}
+    @emitter.emit 'did-pane-split', {oldPane, newPane, direction, options}
 
   swapItem: ->
     currentPane = getActivePane()
