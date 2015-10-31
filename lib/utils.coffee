@@ -1,5 +1,8 @@
 _ = require 'underscore-plus'
 
+getView = (model) ->
+  atom.views.getView(model)
+
 getActivePane = ->
   atom.workspace.getActivePane()
 
@@ -106,6 +109,7 @@ copyRoot = (root) ->
   newRoot
 
 module.exports = {
+  getView
   getActivePane
   debug
   splitPane

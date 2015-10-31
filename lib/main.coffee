@@ -1,6 +1,7 @@
 {CompositeDisposable, Emitter} = require 'atom'
 {
   debug
+  getView
   getActivePane
   splitPane
   resetPreviewStateForPane
@@ -35,7 +36,7 @@ module.exports =
 
   activate: (state) ->
     @subscriptions = new CompositeDisposable
-    @workspaceElement = atom.views.getView(atom.workspace)
+    @workspaceElement = getView(atom.workspace)
     Pane = atom.workspace.getActivePane().constructor
     @emitter = new Emitter
 
@@ -57,14 +58,16 @@ module.exports =
 
     @onDidPaneSplit ({oldPane, newPane, direction, options}) ->
       return unless oldEditor = oldPane.getActiveEditor()
+      oldEditorElement = getView(oldEditor)
       newEditor = newPane.getActiveEditor()
+      newEditorElement = getView(newEditor)
       switch direction
         when 'right', 'left'
-          newEditor.setScrollTop(oldEditor.getScrollTop())
+          newEditorElement.setScrollTop(oldEditorElement.getScrollTop())
 
         when 'up', 'down'
           {pixelTop, ratio} = options
-          newHeight = newEditor.getHeight()
+          newHeight = newEditorElement.getHeight()
           scrolloff = 2
           lineHeightInPixels = oldEditor.getLineHeightInPixels()
 
@@ -73,8 +76,8 @@ module.exports =
           offsetCursor = newHeight * ratio
           scrollTop = pixelTop - Math.min(Math.max(offsetCursor, offsetTop), offsetBottom)
 
-          oldEditor.setScrollTop(scrollTop)
-          newEditor.setScrollTop(scrollTop)
+          oldEditorElement.setScrollTop(scrollTop)
+          newEditorElement.setScrollTop(scrollTop)
 
   deactivate: ->
     @subscriptions.dispose()
@@ -91,16 +94,14 @@ module.exports =
       subs.dispose()
 
   getCursorPositionInfo: (editor) ->
-    editorElement = atom.views.getView(editor)
+    editorElement = getView(editor)
     point = editor.getCursorScreenPosition()
     pixelTop = editorElement.pixelPositionForScreenPosition(point).top
-    ratio = (pixelTop - editor.getScrollTop()) / editor.getHeight()
+    ratio = (pixelTop - editorElement.getScrollTop()) / editorElement.getHeight()
     {pixelTop, ratio}
 
   split: (direction) ->
     oldPane = getActivePane()
-    editor =
-
     options = null
     if direction in ['up', 'down']
       options = @getCursorPositionInfo(oldPane.getActiveEditor())
