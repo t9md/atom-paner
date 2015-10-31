@@ -1,4 +1,4 @@
-## 0.1.14 [WIP]
+## 0.1.14
 - FIX: Deprecation warning
 
 ## 0.1.13
