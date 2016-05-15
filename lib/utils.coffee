@@ -35,6 +35,23 @@ getAdjacentPane = (pane) ->
   [prev, next] = [children[index-1], children[index+1]]
   _.last(_.compact([prev, next]))
 
+getAdjacentPaneDirectionForPane = (pane) ->
+  parent = pane.getParent()
+  children = parent.getChildren?()
+  return unless children
+
+  index = children.indexOf(pane)
+  [next, previous] = [children[index+1], children[index-1]]
+  switch parent.getOrientation()
+    when 'horizontal'
+      switch
+        when next? then "right"
+        when previous? then "left"
+    when 'vertical'
+      switch
+        when next? then "below"
+        when previous? then "above"
+
 # Move active item from srcPane to dstPane's last index
 moveActivePaneItem = (srcPane, dstPane) ->
   item = srcPane.getActiveItem()
@@ -116,6 +133,7 @@ module.exports = {
   resetPreviewStateForPane
   setConfig
   getAdjacentPane
+  getAdjacentPaneDirectionForPane
   moveActivePaneItem
   swapActiveItem
   moveAllPaneItems
