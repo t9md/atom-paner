@@ -1,3 +1,8 @@
+# Not maintained
+
+Once published on atom.io
+But now unpublished at 2016.05.16.
+
 # Paner [![Build Status](https://travis-ci.org/t9md/atom-paner.svg)](https://travis-ci.org/t9md/atom-paner)
 
 Missing pane manipulation utilities.
