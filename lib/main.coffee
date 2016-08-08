@@ -1,28 +1,98 @@
 _ = require 'underscore-plus'
 {CompositeDisposable, Emitter} = require 'atom'
-{
-  debug
-  getView
-  getActivePane
-  splitPane
-  withConfig
-  getAdjacentPane
-  moveActivePaneItem
-  swapActiveItem
-  moveAllPaneItems
-  mergeToParentPaneAxis
-  getAllPaneAxis
-  copyPaneAxis
-  copyRoot
-} = require './utils'
+
+# Utils
+getView = (model) ->
+  atom.views.getView(model)
+
+getActivePane = ->
+  atom.workspace.getActivePane()
+
+debug = (msg) ->
+  return unless atom.config.get('paner.debug')
+  console.log msg
+
+splitPane = (pane, direction, params) ->
+  method = "split#{_.capitalize(direction)}"
+  pane[method](params)
+
+withConfig = (scope, value, fn) ->
+  origialValue = atom.config.get(scope)
+  unless origialValue is value
+    atom.config.set(scope, value)
+    restoreConfig = ->
+      atom.config.set(scope, origialValue)
+  try
+    fn()
+  finally
+    restoreConfig?()
+
+# Return adjacent pane within current PaneAxis.
+#  * return next Pane if exists.
+#  * return previous pane if next pane was not exits.
+getAdjacentPane = (pane) ->
+  return unless children = pane.getParent().getChildren?()
+  index = children.indexOf(pane)
+  [prev, next] = [children[index-1], children[index+1]]
+  _.last(_.compact([prev, next]))
+
+# Move active item from srcPane to dstPane's last index
+moveActivePaneItem = (srcPane, dstPane) ->
+  item = srcPane.getActiveItem()
+  index = dstPane.getItems().length
+  srcPane.moveItemToPane(item, dstPane, index)
+  dstPane.activateItem(item)
+
+# [FIXME] after swapped, dst pane have no focus, but cursor is still visible.
+# I can manually cursor.setVisible(false) but this cause curor is not visible
+# after pane got focus again.
+swapActiveItem = (srcPane, dstPane) ->
+  srcIndex = null
+  if (srcItem  = srcPane.getActiveItem())?
+    srcIndex = srcPane.getActiveItemIndex()
+
+  dstIndex = null
+  if (dstItem  = dstPane.getActiveItem())?
+    dstIndex = srcPane.getActiveItemIndex()
+
+  if srcItem?
+    srcPane.moveItemToPane(srcItem, dstPane, dstIndex)
+
+  if dstItem?
+    dstPane.moveItemToPane(dstItem, srcPane, srcIndex)
+    srcPane.activateItem(dstItem)
+  srcPane.activate()
+
+moveAllPaneItems = (srcPane, dstPane) ->
+  activeItem = srcPane.getActiveItem() # remember ActiveItem
+  srcPane.moveItemToPane(item, dstPane, i) for item, i in srcPane.getItems()
+  dstPane.activateItem(activeItem)
+
+mergeToParentPaneAxis = (paneAxis) ->
+  parent = paneAxis.getParent()
+  children = paneAxis.getChildren()
+  firstChild = children.shift()
+  firstChild.setFlexScale()
+  parent.replaceChild(paneAxis, firstChild)
+  while (child = children.shift())
+    parent.insertChildAfter(firstChild, child)
+  paneAxis.destroy()
+
+getAllPaneAxis = (paneAxis, results=[]) ->
+  for child in paneAxis.getChildren() when child instanceof PaneAxis
+    results.push(child)
+    getAllPaneAxis(child, results)
+  results
+
+isSameOrientationAsParent = (paneAxis) ->
+  paneAxis.getOrientation() is paneAxis.getParent().getOrientation()
 
 buildPane = ->
-  new Pane({
+  new Pane
     applicationDelegate: atom.applicationDelegate,
     config: atom.config,
     deserializerManager: atom.deserializers,
     notificationManager: atom.notifications
-  })
 
 PaneAxis = null
 Pane = null
@@ -31,7 +101,7 @@ module.exports =
   activate: (state) ->
     @subscriptions = new CompositeDisposable
     @workspaceElement = getView(atom.workspace)
-    Pane = atom.workspace.getActivePane().constructor
+    Pane = getActivePane().constructor
     @emitter = new Emitter
 
     @subscriptions.add atom.commands.add 'atom-workspace',
@@ -75,7 +145,7 @@ module.exports =
 
   deactivate: ->
     @subscriptions.dispose()
-    {Pane, PaneAxis, @workspaceElement} = {}
+    {@workspaceElement} = {}
 
   onDidPaneSplit: (callback) ->
     @emitter.on 'did-pane-split', callback
@@ -116,25 +186,6 @@ module.exports =
       moveActivePaneItem(currentPane, dstPane)
       dstPane.activate() if activate
 
-  # This code is result of try&error to get desirble result.
-  #  * I couldn't understand why copyRoot is necessary, but without copying PaneAxis,
-  #    it seem to PaneAxis detatched from View element and not reflect model change.
-  #  * Simply changing order of children by splicing children of PaneAxis or similar
-  #    kind of direct manupilation to Pane or PaneAxis won't work, it easily bypassing
-  #    event callback and produce bunch of Exception.
-  #  * I wanted to use `currentPane` directly, instead of `new Pane() then moveAllPaneItems`, but I gave up to
-  #    solve a lot of exception caused by removeChild(currentPane). So I took moveAllPaneItems() approarch.
-  #  * So as conclusion, code is far from ideal, I took dirty try&error approarch,
-  #    need to be improved in future. There must be better way.
-  #
-  # [FIXME]
-  # Occasionally blank pane remain on original pane position.
-  # Clicking this blank pane cause Uncaught Error: Pane has bee destroyed.
-  # This issue is already reported to https://github.com/atom/atom/issues/4643
-  #
-  # [TODO]
-  # Understand Pane, PaneAxis, PaneContainer and its corresponding ViewElement and surrounding
-  # Event callbacks. Ideally it should be done without copyRoot()?
   moveToVery: (direction) ->
     return if atom.workspace.getPanes().length < 2
     currentPane = getActivePane()
@@ -146,10 +197,8 @@ module.exports =
     PaneAxis ?= root.constructor
 
     if root.getOrientation() isnt orientation
-      debug("Different orientation")
-      children = [copyRoot(root)]
-      root.destroy()
-      container.setRoot(root = new PaneAxis({container, orientation, children}))
+      container.setRoot(new PaneAxis({container, orientation, children: [root]}))
+      root = container.getRoot()
 
     newPane = buildPane()
     switch direction
@@ -162,7 +211,7 @@ module.exports =
     currentPane.destroy()
 
     if atom.config.get('paner.mergeSameOrientaion')
-      for axis in getAllPaneAxis(root) when axis.getOrientation() is axis.getParent().getOrientation()
+      for axis in getAllPaneAxis(root) when isSameOrientationAsParent(axis)
         debug("merge to parent!!")
         mergeToParentPaneAxis(axis)
 
