@@ -78,6 +78,8 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 
 * Mine.
 
+I'm [vim-mode-plus](https://atom.io/packages/vim-mode-plus) user.
+
 ```coffeescript
 'atom-workspace:not([mini])':
   'cmd-x': 'paner:swap-item'
@@ -85,6 +87,10 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
   'cmd-K': 'paner:very-top'
   'cmd-J': 'paner:very-bottom'
   'cmd-H': 'paner:very-left'
+  'cmd-L': 'paner:very-right'
+
+'atom-text-editor.vim-mode-plus.normal-mode':
+  # Override default cmd-L(editor:split-selections-into-lines)
   'cmd-L': 'paner:very-right'
 ```
 
