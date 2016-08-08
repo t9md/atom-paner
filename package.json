@@ -26,5 +26,16 @@
   },
   "dependencies": {
     "underscore-plus": "^1.6.6"
+  },
+  "configSchema": {
+    "debug": {
+      "type": "boolean",
+      "default": false
+    },
+    "mergeSameOrientaion": {
+      "type": "boolean",
+      "default": true,
+      "description": "When moving very far, merge child PaneAxis to Parent if orientaion is same"
+    }
   }
 }

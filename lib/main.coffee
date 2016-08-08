@@ -1,11 +1,11 @@
+_ = require 'underscore-plus'
 {CompositeDisposable, Emitter} = require 'atom'
 {
   debug
   getView
   getActivePane
   splitPane
-  resetPreviewStateForPane
-  setConfig
+  withConfig
   getAdjacentPane
   moveActivePaneItem
   swapActiveItem
@@ -14,26 +14,20 @@
   getAllPaneAxis
   copyPaneAxis
   copyRoot
-  isSameOrientationAsParent
 } = require './utils'
+
+buildPane = ->
+  new Pane({
+    applicationDelegate: atom.applicationDelegate,
+    config: atom.config,
+    deserializerManager: atom.deserializers,
+    notificationManager: atom.notifications
+  })
 
 PaneAxis = null
 Pane = null
 
-# Utility
-# -------------------------
-Config =
-  debug:
-    type: 'boolean'
-    default: false
-  mergeSameOrientaion:
-    type: 'boolean'
-    default: true
-    description: "When moving very far, merge child PaneAxis to Parent if orientaion is same"
-
 module.exports =
-  config: Config
-
   activate: (state) ->
     @subscriptions = new CompositeDisposable
     @workspaceElement = getView(atom.workspace)
@@ -41,20 +35,20 @@ module.exports =
     @emitter = new Emitter
 
     @subscriptions.add atom.commands.add 'atom-workspace',
-      'paner:maximize':    => @maximize()
-      'paner:swap-item':   => @swapItem()
-      'paner:merge-item':  => @mergeItem {activate: true}
-      'paner:send-item':   => @mergeItem {activate: false}
+      'paner:maximize': => @maximize()
+      'paner:swap-item': => @swapItem()
+      'paner:merge-item': => @mergeItem(activate: true)
+      'paner:send-item': => @mergeItem(activate: false)
 
-      'paner:split-up':    => @split 'up'
-      'paner:split-down':  => @split 'down'
-      'paner:split-left':  => @split 'left'
-      'paner:split-right': => @split 'right'
+      'paner:split-up': => @split('up')
+      'paner:split-down': => @split('down')
+      'paner:split-left': => @split('left')
+      'paner:split-right': => @split('right')
 
-      'paner:very-top':    => @moveToVery 'top'
-      'paner:very-bottom': => @moveToVery 'bottom'
-      'paner:very-left':   => @moveToVery 'left'
-      'paner:very-right':  => @moveToVery 'right'
+      'paner:very-top': => @moveToVery('top')
+      'paner:very-bottom': => @moveToVery('bottom')
+      'paner:very-left': => @moveToVery('left')
+      'paner:very-right': => @moveToVery('right')
 
     @onDidPaneSplit ({oldPane, newPane, direction, options}) ->
       return unless oldEditor = oldPane.getActiveEditor()
@@ -71,7 +65,7 @@ module.exports =
           scrolloff = 2
           lineHeightInPixels = oldEditor.getLineHeightInPixels()
 
-          offsetTop    = lineHeightInPixels * scrolloff
+          offsetTop = lineHeightInPixels * scrolloff
           offsetBottom = newHeight - lineHeightInPixels * (scrolloff+1)
           offsetCursor = newHeight * ratio
           scrollTop = pixelTop - Math.min(Math.max(offsetCursor, offsetTop), offsetBottom)
@@ -105,7 +99,7 @@ module.exports =
     options = null
     if direction in ['up', 'down']
       options = @getCursorPositionInfo(oldPane.getActiveEditor())
-    newPane = splitPane(oldPane, direction)
+    newPane = splitPane(oldPane, direction, copyActiveItem: true, activate: false)
     @emitter.emit 'did-pane-split', {oldPane, newPane, direction, options}
 
   swapItem: ->
@@ -113,11 +107,8 @@ module.exports =
     if adjacentPane = getAdjacentPane(currentPane)
       # In case there is only one item in pane, we need to avoid pane itself
       # destroyed while swapping.
-      try
-        restoreConfig = setConfig('core.destroyEmptyPanes', false)
+      withConfig 'core.destroyEmptyPanes', false, ->
         swapActiveItem(currentPane, adjacentPane)
-      finally
-        restoreConfig?()
 
   mergeItem: ({activate}={}) ->
     currentPane = getActivePane()
@@ -155,14 +146,14 @@ module.exports =
     PaneAxis ?= root.constructor
 
     if root.getOrientation() isnt orientation
-      debug "Different orientation"
+      debug("Different orientation")
       children = [copyRoot(root)]
       root.destroy()
       container.setRoot(root = new PaneAxis({container, orientation, children}))
 
-    newPane = new Pane()
+    newPane = buildPane()
     switch direction
-      when 'top', 'left'     then root.addChild(newPane, 0)
+      when 'top', 'left' then root.addChild(newPane, 0)
       when 'right', 'bottom' then root.addChild(newPane)
 
     # [NOTE] Order is matter.
@@ -171,8 +162,8 @@ module.exports =
     currentPane.destroy()
 
     if atom.config.get('paner.mergeSameOrientaion')
-      for axis in getAllPaneAxis(root) when isSameOrientationAsParent(axis)
-        debug "merge to parent!!"
+      for axis in getAllPaneAxis(root) when axis.getOrientation() is axis.getParent().getOrientation()
+        debug("merge to parent!!")
         mergeToParentPaneAxis(axis)
 
     newPane.activate()

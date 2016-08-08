@@ -10,57 +10,43 @@ debug = (msg) ->
   return unless atom.config.get('paner.debug')
   console.log msg
 
-splitPane = (pane, direction) ->
+splitPane = (pane, direction, params) ->
   method = "split#{_.capitalize(direction)}"
-  pane[method]({copyActiveItem: true, activate: false})
+  pane[method](params)
 
-resetPreviewStateForPane = (pane) ->
-  paneElement = atom.views.getView(pane)
-  paneElement.getElementsByClassName('preview-tab')[0]?.clearPreview()
-
-# Return function to restore origial value.
-setConfig = (scope, value) ->
+withConfig = (scope, value, fn) ->
   origialValue = atom.config.get(scope)
-  if origialValue isnt value
+  unless origialValue is value
     atom.config.set(scope, value)
-    -> # return function to restore original value
+    restoreConfig = ->
       atom.config.set(scope, origialValue)
+
+  try
+    fn()
+  finally
+    restoreConfig?()
 
 # Return adjacent pane within current PaneAxis.
 #  * return next Pane if exists.
 #  * return previous pane if next pane was not exits.
 getAdjacentPane = (pane) ->
   return unless children = pane.getParent().getChildren?()
-  index = children.indexOf pane
+  index = children.indexOf(pane)
   [prev, next] = [children[index-1], children[index+1]]
   _.last(_.compact([prev, next]))
-
-getAdjacentPaneDirectionForPane = (pane) ->
-  parent = pane.getParent()
-  children = parent.getChildren?()
-  return unless children
-
-  index = children.indexOf(pane)
-  [next, previous] = [children[index+1], children[index-1]]
-  switch parent.getOrientation()
-    when 'horizontal'
-      switch
-        when next? then "right"
-        when previous? then "left"
-    when 'vertical'
-      switch
-        when next? then "below"
-        when previous? then "above"
 
 # Move active item from srcPane to dstPane's last index
 moveActivePaneItem = (srcPane, dstPane) ->
   item = srcPane.getActiveItem()
   index = dstPane.getItems().length
-  resetPreviewStateForPane(dstPane)
+  # resetPreviewStateForPane(dstPane)
   srcPane.moveItemToPane(item, dstPane, index)
   dstPane.activateItem(item)
-  resetPreviewStateForPane(dstPane)
+  # resetPreviewStateForPane(dstPane)
 
+# [FIXME] after swapped, dst pane have no focus, but cursor is still visible.
+# I can manually cursor.setVisible(false) but this cause curor is not visible
+# after pane got focus again.
 swapActiveItem = (srcPane, dstPane) ->
   srcIndex = null
   if (srcItem  = srcPane.getActiveItem())?
@@ -75,19 +61,15 @@ swapActiveItem = (srcPane, dstPane) ->
 
   if dstItem?
     dstPane.moveItemToPane(dstItem, srcPane, srcIndex)
+    # if editor = dstPane.getActiveEditor()
+    #   cursor.setVisible(false) for cursor in editor.getCursors()
     srcPane.activateItem(dstItem)
   srcPane.activate()
 
 moveAllPaneItems = (srcPane, dstPane) ->
   activeItem = srcPane.getActiveItem() # remember ActiveItem
-  for item, i in srcPane.getItems()
-    srcPane.moveItemToPane item, dstPane, i
-    resetPreviewStateForPane(dstPane)
+  srcPane.moveItemToPane(item, dstPane, i) for item, i in srcPane.getItems()
   dstPane.activateItem(activeItem)
-
-isSameOrientationAsParent = (paneAxis) ->
-  parent = paneAxis.getParent()
-  paneAxis.getOrientation() is parent.getOrientation()
 
 mergeToParentPaneAxis = (paneAxis) ->
   parent = paneAxis.getParent()
@@ -105,11 +87,12 @@ getAllPaneAxis = (paneAxis, results=[]) ->
   for child in paneAxis.getChildren()
     if child instanceof PaneAxis
       results.push(child)
-      getAllPaneAxis child, results
+      getAllPaneAxis(child, results)
   results
 
 copyPaneAxis = (paneAxis) ->
   PaneAxis ?= paneAxis.constructor
+
   children = paneAxis.getChildren()
   paneAxis.unsubscribeFromChild(c) for c in children
 
@@ -130,10 +113,8 @@ module.exports = {
   getActivePane
   debug
   splitPane
-  resetPreviewStateForPane
-  setConfig
+  withConfig
   getAdjacentPane
-  getAdjacentPaneDirectionForPane
   moveActivePaneItem
   swapActiveItem
   moveAllPaneItems
@@ -141,5 +122,4 @@ module.exports = {
   getAllPaneAxis
   copyPaneAxis
   copyRoot
-  isSameOrientationAsParent
 }
