@@ -61,8 +61,6 @@ swapActiveItem = (srcPane, dstPane) ->
 
   if dstItem?
     dstPane.moveItemToPane(dstItem, srcPane, srcIndex)
-    # if editor = dstPane.getActiveEditor()
-    #   cursor.setVisible(false) for cursor in editor.getCursors()
     srcPane.activateItem(dstItem)
   srcPane.activate()
 

@@ -1,8 +1,3 @@
-# Not maintained
-
-Once published on atom.io
-But now unpublished at 2016.05.16.
-
 # Paner [![Build Status](https://travis-ci.org/t9md/atom-paner.svg)](https://travis-ci.org/t9md/atom-paner)
 
 Missing pane manipulation utilities.
@@ -19,24 +14,24 @@ Automatically exit Maximized mode if Active Pane changed.
 
 # Commands
 
-## pane item manipulation
+## Pane item manipulation
 
 * `paner:swap-item`: Swap item with adjacent pane's.
 * `paner:send-item`: Send active item to adjacent Pane.
 * `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
 
-## zen-mode
+## Zen-mode
 
 * `paner:maximize`: Maximize or unMaximize current pane item.
 
-## move pane
+## Move pane to VERY far direction
 
 * `paner:very-top`: Move current pane to very top.
 * `paner:very-bottom`: Move current pane to very bottom.
 * `paner:very-right`: Move current pane to very right.
 * `paner:very-left`: Move current pane to very left.
 
-## split
+## Split with keeping scroll ratio
 
 * `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor.
 * `paner:split-down`: Keep scroll state for newly opened editor.
@@ -51,17 +46,17 @@ No default keymap.
 
 ```coffeescript
 'atom-workspace:not([mini])':
-  'cmd-k x':         'paner:swap-item'
-  'cmd-k X':         'paner:send-item'
-  'cmd-enter':       'paner:maximize'
-  'cmd-k cmd-up':    'paner:very-top'
-  'cmd-k cmd-down':  'paner:very-bottom'
-  'cmd-k cmd-left':  'paner:very-left'
+  'cmd-k x': 'paner:swap-item'
+  'cmd-k X': 'paner:send-item'
+  'cmd-enter': 'paner:maximize'
+  'cmd-k cmd-up': 'paner:very-top'
+  'cmd-k cmd-down': 'paner:very-bottom'
+  'cmd-k cmd-left': 'paner:very-left'
   'cmd-k cmd-right': 'paner:very-right'
 
-  'cmd-k up':    'paner:split-up'
-  'cmd-k down':  'paner:split-down'
-  'cmd-k left':  'paner:split-left'
+  'cmd-k up': 'paner:split-up'
+  'cmd-k down': 'paner:split-down'
+  'cmd-k left': 'paner:split-left'
   'cmd-k right': 'paner:split-right'
 ```
 
@@ -71,30 +66,26 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 
 ```coffeescript
 'atom-text-editor.vim-mode.normal-mode':
-  'ctrl-w x':     'paner:swap-item'
-  'ctrl-w X':     'paner:send-item'
+  'ctrl-w x': 'paner:swap-item'
+  'ctrl-w X': 'paner:send-item'
   'ctrl-w enter': 'paner:maximize'
-  'ctrl-w K':     'paner:very-top'
-  'ctrl-w J':     'paner:very-bottom'
-  'ctrl-w H':     'paner:very-left'
-  'ctrl-w L':     'paner:very-right'
-  'ctrl-w s':     'paner:split-up'
-  'ctrl-w v':     'paner:split-left'
+  'ctrl-w K': 'paner:very-top'
+  'ctrl-w J': 'paner:very-bottom'
+  'ctrl-w H': 'paner:very-left'
+  'ctrl-w L': 'paner:very-right'
+  'ctrl-w v': 'paner:split-left'
 ```
 
 * Mine.
 
 ```coffeescript
 'atom-workspace:not([mini])':
-  'cmd-x':     'paner:swap-item'
-  'cmd-X':     'paner:send-item'
-  'cmd-enter': 'paner:maximize'
-  'cmd-K':     'paner:very-top'
-  'cmd-J':     'paner:very-bottom'
-  'cmd-H':     'paner:very-left'
-  'cmd-L':     'paner:very-right'
-  'cmd-2':     'paner:split-up'
-  'cmd-3':     'paner:split-left'
+  'cmd-x': 'paner:swap-item'
+  'cmd-X': 'paner:send-item'
+  'cmd-K': 'paner:very-top'
+  'cmd-J': 'paner:very-bottom'
+  'cmd-H': 'paner:very-left'
+  'cmd-L': 'paner:very-right'
 ```
 
 # Misc

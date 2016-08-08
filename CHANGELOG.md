@@ -1,3 +1,9 @@
+## 0.2.0
+- FIX: now Paner comeback. works again!
+
+## 2016.05.16.
+- Unpublished from Atom.io since I couldn't fix immediately and not sure I will fix again.
+
 ## 0.1.14
 - FIX: Deprecation warning
 
