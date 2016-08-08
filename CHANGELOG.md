@@ -1,3 +1,6 @@
+## 0.2.1
+- Doc: Update keymap example.
+
 ## 0.2.0
 - FIX: now Paner comeback. works again!
 
