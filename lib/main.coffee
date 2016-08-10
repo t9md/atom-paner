@@ -9,8 +9,8 @@ getActivePane = ->
   atom.workspace.getActivePane()
 
 debug = (msg) ->
-  return unless atom.config.get('paner.debug')
   console.log msg
+  return unless atom.config.get('paner.debug')
 
 splitPane = (pane, direction, params) ->
   method = "split#{_.capitalize(direction)}"
@@ -85,7 +85,7 @@ getAllPaneAxis = (paneAxis, results=[]) ->
   results
 
 isSameOrientationAsParent = (paneAxis) ->
-  paneAxis.getOrientation() is paneAxis.getParent().getOrientation()
+  paneAxis.getOrientation() is paneAxis.getParent().getOrientation?()
 
 buildPane = ->
   new Pane
@@ -190,29 +190,27 @@ module.exports =
     return if atom.workspace.getPanes().length < 2
     currentPane = getActivePane()
     container = currentPane.getContainer()
+    flexScale = currentPane.getFlexScale()
     root = container.getRoot()
     orientation = if direction in ['top', 'bottom'] then 'vertical' else 'horizontal'
 
     # If there is multiple pane in window, root is always instance of PaneAxis
     PaneAxis ?= root.constructor
-
+    parent = currentPane.getParent()
     if root.getOrientation() isnt orientation
-      container.setRoot(new PaneAxis({container, orientation, children: [root]}))
+      container.setRoot(new PaneAxis({container, orientation, children: [root], flexScale}))
       root = container.getRoot()
+      parent.removeChild(currentPane)
+    else
+      parent.removeChild(currentPane, true)
 
-    newPane = buildPane()
     switch direction
-      when 'top', 'left' then root.addChild(newPane, 0)
-      when 'right', 'bottom' then root.addChild(newPane)
-
-    # [NOTE] Order is matter.
-    # Calling moveAllPaneItems() before setRoot() cause first item blank
-    moveAllPaneItems(currentPane, newPane)
-    currentPane.destroy()
+      when 'top', 'left' then root.addChild(currentPane, 0)
+      when 'right', 'bottom' then root.addChild(currentPane)
 
     if atom.config.get('paner.mergeSameOrientaion')
       for axis in getAllPaneAxis(root) when isSameOrientationAsParent(axis)
         debug("merge to parent!!")
         mergeToParentPaneAxis(axis)
-
-    newPane.activate()
+    # root.setFlexScale(1)
+    currentPane.activate()
