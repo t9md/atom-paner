@@ -87,13 +87,6 @@ getAllPaneAxis = (paneAxis, results=[]) ->
 isSameOrientationAsParent = (paneAxis) ->
   paneAxis.getOrientation() is paneAxis.getParent().getOrientation?()
 
-buildPane = ->
-  new Pane
-    applicationDelegate: atom.applicationDelegate,
-    config: atom.config,
-    deserializerManager: atom.deserializers,
-    notificationManager: atom.notifications
-
 PaneAxis = null
 Pane = null
 
