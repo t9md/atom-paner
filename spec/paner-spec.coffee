@@ -1,33 +1,38 @@
 _ = require 'underscore-plus'
+{Range} = require 'atom'
 
-{
-  setConfig, openFile,
-  getVisibleBufferRowRange, getVisibleBufferRange,
-  getView,
-} = require './spec-helper'
+getView = (model) -> atom.views.getView(model)
 
+openFile = (filePath, options={}, fn=null) ->
+  waitsForPromise ->
+    atom.workspace.open(filePath, options).then (e) ->
+      fn?(e)
+
+getVisibleBufferRowRange = (e) ->
+  getView(e).getVisibleRowRange().map (row) ->
+    e.bufferRowForScreenRow row
+
+addCustomMatchers = (spec) ->
+  spec.addMatchers
+    toHaveSampeParent: (expected) ->
+      @actual.getParent() is expected.getParent()
+
+    toHaveScrollTop: (expected) ->
+      getView(@actual).getScrollTop() is expected
+
+    toHaveVisibleBufferRowRange: (expected) ->
+      notText = if @isNot then " not" else ""
+      actualRowRange = getVisibleBufferRowRange(@actual)
+      this.message = ->
+        "Expected object with visible row range #{jasmine.pp(actualRowRange)} to#{notText} have visible row range #{jasmine.pp(expected)}"
+      _.isEqual(actualRowRange, expected)
 
 describe "paner", ->
   [main, view, workspaceElement] = []
   [pathSample1, pathSample2] = []
 
   dispatchCommand = (command) ->
-    atom.commands.dispatch(workspaceElement, "paner:#{command}")
-
-  addCustomMatchers = (spec) ->
-    spec.addMatchers
-      toHaveSampeParent: (expected) ->
-        @actual.getParent() is expected.getParent()
-
-      toHaveScrollTop: (expected) ->
-        getView(@actual).getScrollTop() is expected
-
-      toHaveVisibleBufferRowRange: (expected) ->
-        notText = if @isNot then " not" else ""
-        actualRowRange = getVisibleBufferRowRange(@actual)
-        this.message = ->
-          "Expected object with visible row range #{jasmine.pp(actualRowRange)} to#{notText} have visible row range #{jasmine.pp(expected)}"
-        _.isEqual(actualRowRange, expected)
+    atom.commands.dispatch(workspaceElement, command)
 
   beforeEach ->
     addCustomMatchers(this)
@@ -35,12 +40,12 @@ describe "paner", ->
     activationPromise = null
     runs ->
       workspaceElement = getView(atom.workspace)
-      pathSample1 = atom.project.resolvePath "sample-1.coffee"
-      pathSample2 = atom.project.resolvePath "sample-2.coffee"
+      pathSample1 = atom.project.resolvePath("sample-1.coffee")
+      pathSample2 = atom.project.resolvePath("sample-2.coffee")
       jasmine.attachToDOM(workspaceElement)
       activationPromise = atom.packages.activatePackage('paner').then (pack) ->
         main = pack.mainModule
-      dispatchCommand('swap-item')
+      dispatchCommand('paner:swap-item')
 
     waitsForPromise ->
       activationPromise
@@ -48,16 +53,16 @@ describe "paner", ->
   describe "paner:maximize", ->
     describe "when maximized", ->
       it 'set css class to workspace element', ->
-        dispatchCommand('maximize')
+        dispatchCommand('paner:maximize')
         expect(workspaceElement.classList.contains('paner-maximize')).toBe(true)
 
     describe "when maximized again", ->
       beforeEach ->
-        dispatchCommand('maximize')
+        dispatchCommand('paner:maximize')
         expect(workspaceElement.classList.contains('paner-maximize')).toBe(true)
 
       it 'remove css class from workspace element', ->
-        dispatchCommand('maximize')
+        dispatchCommand('paner:maximize')
         expect(workspaceElement.classList.contains('paner-maximize')).toBe(false)
 
   describe "pane item manipulation", ->
@@ -70,31 +75,31 @@ describe "paner", ->
         panes = atom.workspace.getPanes()
         expect(panes).toHaveLength 2
         [paneL, paneR] = panes
-        expect(paneL.getActiveItem()).toBe e1
-        expect(paneR.getActiveItem()).toBe e2
-        expect(atom.workspace.getActivePane()).toBe paneR
+        expect(paneL.getActiveItem()).toBe(e1)
+        expect(paneR.getActiveItem()).toBe(e2)
+        expect(atom.workspace.getActivePane()).toBe(paneR)
 
     describe "swap-item", ->
       it "swap activeItem to adjacent pane's activeItem", ->
-        dispatchCommand('swap-item')
-        expect(paneL.getActiveItem()).toBe e2
-        expect(paneR.getActiveItem()).toBe e1
-        expect(atom.workspace.getActivePane()).toBe paneR
+        dispatchCommand('paner:swap-item')
+        expect(paneL.getActiveItem()).toBe(e2)
+        expect(paneR.getActiveItem()).toBe(e1)
+        expect(atom.workspace.getActivePane()).toBe(paneR)
 
     describe "merge-item", ->
       it "move active item to adjacent pane and activate adjacent pane", ->
-        dispatchCommand('merge-item')
-        expect(paneL.getItems()).toEqual [e1, e2]
-        expect(paneR.getItems()).toEqual []
-        expect(paneL.getActiveItem()).toBe e2
-        expect(atom.workspace.getActivePane()).toBe paneL
+        dispatchCommand('paner:merge-item')
+        expect(paneL.getItems()).toEqual([e1, e2])
+        expect(paneR.getItems()).toEqual([])
+        expect(paneL.getActiveItem()).toBe(e2)
+        expect(atom.workspace.getActivePane()).toBe(paneL)
     describe "send-item", ->
       it "move active item to adjacent pane and don't change active pane", ->
-        dispatchCommand('send-item')
-        expect(paneL.getItems()).toEqual [e1, e2]
-        expect(paneR.getItems()).toEqual []
-        expect(paneL.getActiveItem()).toBe e2
-        expect(atom.workspace.getActivePane()).toBe paneR
+        dispatchCommand('paner:send-item')
+        expect(paneL.getItems()).toEqual([e1, e2])
+        expect(paneR.getItems()).toEqual([])
+        expect(paneL.getActiveItem()).toBe(e2)
+        expect(atom.workspace.getActivePane()).toBe(paneR)
 
   describe "split", ->
     [editor, editorElement, pathSample, subs, newEditor] = []
@@ -137,17 +142,16 @@ describe "paner", ->
         expect(newPane.getParent().getOrientation()).toBe 'vertical'
         newEditorElement = getView(newEditor)
         expect(editor).toHaveScrollTop newEditorElement.getScrollTop()
-        # expect(newEditor).toHaveVisibleBufferRowRange [14, 18]
 
       describe "split-up", ->
         it "split-up with keeping scroll ratio", ->
-          dispatchCommand('split-up')
+          dispatchCommand('paner:split-up')
           setRowsPerPage(editor, rowsPerPage/2)
           expect(atom.workspace.getPanes()).toEqual [newPane, oldPane]
 
       describe "split-down", ->
         it "split-down with keeping scroll ratio", ->
-          dispatchCommand('split-down')
+          dispatchCommand('paner:split-down')
           setRowsPerPage(editor, rowsPerPage/2)
           expect(atom.workspace.getPanes()).toEqual [oldPane, newPane]
 
@@ -166,21 +170,22 @@ describe "paner", ->
         newEditorElement = getView(newEditor)
         expect(editor).toHaveScrollTop newEditorElement.getScrollTop()
         expect(editor).toHaveScrollTop originalScrollTop
-        # expect(editor).toHaveVisibleBufferRowRange [10, 19]
 
       describe "split left", ->
         it "split-left with keeping scroll ratio", ->
-          dispatchCommand('split-left')
+          dispatchCommand('paner:split-left')
           expect(atom.workspace.getPanes()).toEqual [newPane, oldPane]
 
       describe "split-right", ->
         it "split-right with keeping scroll ratio", ->
-          dispatchCommand('split-right')
+          dispatchCommand('paner:split-right')
           expect(atom.workspace.getPanes()).toEqual [oldPane, newPane]
 
   describe "moveToVery direction", ->
     [p1, p2, p3] = []
     [f1, f2, f3] = []
+    [e1, e2, e3] = []
+
     split = (direction) ->
       e = atom.workspace.getActiveTextEditor()
       atom.commands.dispatch(getView(e), "pane:split-#{direction}")
@@ -198,6 +203,23 @@ describe "paner", ->
       if orientaions?
         expect(getPaneOrientations()).toEqual orientaions
 
+    moveToVery = ({initialPane, command}) ->
+      initialPane.activate()
+      dispatchCommand(command)
+
+    ensurePaneLayout = (layout) ->
+      pane = atom.workspace.getActivePane()
+      root = pane.getContainer().getRoot()
+      expect(getPaneLayout(root)).toEqual(layout)
+
+    getPaneLayout = (root) ->
+      layout = {}
+      layout[root.getOrientation()] = root.getChildren().map (child) ->
+        switch child.constructor.name
+          when 'Pane' then child.getItems()
+          when 'PaneAxis' then getPaneLayout(child)
+      layout
+
     beforeEach ->
       f1 = atom.project.resolvePath("file1")
       f2 = atom.project.resolvePath("file2")
@@ -205,107 +227,142 @@ describe "paner", ->
 
     describe "all horizontal", ->
       beforeEach ->
-        waitsForPromise -> atom.workspace.open(f1)
+        waitsForPromise -> atom.workspace.open(f1).then (e) -> e1 = e
         runs -> split('right')
-        waitsForPromise -> atom.workspace.open(f2)
+        waitsForPromise -> atom.workspace.open(f2).then (e) -> e2 = e
         runs -> split('right')
-        waitsForPromise -> atom.workspace.open(f3)
+        waitsForPromise -> atom.workspace.open(f3).then (e) -> e3 = e
 
         runs ->
           panes = atom.workspace.getPanes()
-          expect(panes).toHaveLength 3
+          expect(panes).toHaveLength(3)
           [p1, p2, p3] = panes
-          expect(p1.getParent().getOrientation()).toBe 'horizontal'
-          expect(atom.workspace.getActivePane()).toBe p3
-          expect(getPanePaths()).toEqual [f1, f2, f3]
+          ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
+          expect(atom.workspace.getActivePane()).toBe(p3)
 
       describe "very-top", ->
-        command = 'very-top'
-        orientations = ['vertical', 'horizontal', 'horizontal']
         describe "when p1 is active", ->
-          it "move to very top", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
+          it "move to very top", ->
+            moveToVery(initialPane: p1, command: 'paner:very-top')
+            ensurePaneLayout(vertical: [[e1], {horizontal: [[e2], [e3]]}])
         describe "when p2 is active", ->
-          it "move to very top", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
+          it "move to very top", ->
+            moveToVery(initialPane: p2, command: 'paner:very-top')
+            ensurePaneLayout(vertical: [[e2], {horizontal: [[e1], [e3]]}])
         describe "when p3 is active", ->
-          it "move to very top", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
+          it "move to very top", ->
+            moveToVery(initialPane: p3, command: 'paner:very-top')
+            ensurePaneLayout(vertical: [[e3], {horizontal: [[e1], [e2]]}])
 
       describe "very-bottom", ->
-        command = 'very-bottom'
-        orientations = ['horizontal', 'horizontal', 'vertical']
         describe "when p1 is active", ->
-          it "move to very bottom", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
+          it "move to very bottom", ->
+            moveToVery(initialPane: p1, command: 'paner:very-bottom')
+            ensurePaneLayout(vertical: [{horizontal: [[e2], [e3]]}, [e1]])
         describe "when p2 is active", ->
-          it "move to very bottom", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
+          it "move to very bottom", ->
+            moveToVery(initialPane: p2, command: 'paner:very-bottom')
+            ensurePaneLayout(vertical: [{horizontal: [[e1], [e3]]}, [e2]])
         describe "when p3 is active", ->
-          it "move to very bottom", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
+          it "move to very bottom", ->
+            moveToVery(initialPane: p3, command: 'paner:very-bottom')
+            ensurePaneLayout(vertical: [{horizontal: [[e1], [e2]]}, [e3]])
 
       describe "very-left", ->
-        command = 'very-left'
         describe "when p1 is active", ->
-          it "move to very left", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
+          it "move to very left", ->
+            moveToVery(initialPane: p1, command: 'paner:very-left')
+            ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
         describe "when p2 is active", ->
-          it "move to very left", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
+          it "move to very left", ->
+            moveToVery(initialPane: p2, command: 'paner:very-left')
+            ensurePaneLayout(horizontal: [[e2], [e1], [e3]])
         describe "when p3 is active", ->
-          it "move to very left", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
+          it "move to very left", ->
+            moveToVery(initialPane: p3, command: 'paner:very-left')
+            ensurePaneLayout(horizontal: [[e3], [e1], [e2]])
 
       describe "very-right", ->
-        command = 'very-right'
         describe "when p1 is active", ->
-          it "move to very right", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
+          it "move to very left", ->
+            moveToVery(initialPane: p1, command: 'paner:very-right')
+            ensurePaneLayout(horizontal: [[e2], [e3], [e1]])
         describe "when p2 is active", ->
-          it "move to very right", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
+          it "move to very left", ->
+            moveToVery(initialPane: p2, command: 'paner:very-right')
+            ensurePaneLayout(horizontal: [[e1], [e3], [e2]])
         describe "when p3 is active", ->
-          it "move to very right", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
+          it "move to very left", ->
+            moveToVery(initialPane: p3, command: 'paner:very-right')
+            ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
 
     describe "all vertical", ->
       beforeEach ->
-        waitsForPromise -> atom.workspace.open(f1)
+        waitsForPromise -> atom.workspace.open(f1).then (e) -> e1 = e
         runs -> split('down')
-        waitsForPromise -> atom.workspace.open(f2)
+        waitsForPromise -> atom.workspace.open(f2).then (e) -> e2 = e
         runs -> split('down')
-        waitsForPromise -> atom.workspace.open(f3)
+        waitsForPromise -> atom.workspace.open(f3).then (e) -> e3 = e
 
         runs ->
           panes = atom.workspace.getPanes()
-          expect(panes).toHaveLength 3
+          expect(panes).toHaveLength(3)
           [p1, p2, p3] = panes
-          expect(p1.getParent().getOrientation()).toBe 'vertical'
-          expect(atom.workspace.getActivePane()).toBe p3
-          expect(getPanePaths()).toEqual [f1, f2, f3]
+          ensurePaneLayout(vertical: [[e1], [e2], [e3]])
+          expect(atom.workspace.getActivePane()).toBe(p3)
 
       describe "very-top", ->
-        command = 'very-top'
         describe "when p1 is active", ->
-          it "move to very top", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
+          it "move to very top", ->
+            moveToVery(initialPane: p1, command: 'paner:very-top')
+            ensurePaneLayout(vertical: [[e1], [e2], [e3]])
         describe "when p2 is active", ->
-          it "move to very top", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
+          it "move to very top", ->
+            moveToVery(initialPane: p2, command: 'paner:very-top')
+            ensurePaneLayout(vertical: [[e2], [e1], [e3]])
         describe "when p3 is active", ->
-          it "move to very top", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
+          it "move to very top", ->
+            moveToVery(initialPane: p3, command: 'paner:very-top')
+            ensurePaneLayout(vertical: [[e3], [e1], [e2]])
+
       describe "very-bottom", ->
-        command = 'very-bottom'
         describe "when p1 is active", ->
-          it "move to very bottom", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
+          it "move to very bottom", ->
+            moveToVery(initialPane: p1, command: 'paner:very-bottom')
+            ensurePaneLayout(vertical: [[e2], [e3], [e1]])
         describe "when p2 is active", ->
-          it "move to very bottom", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
+          it "move to very bottom", ->
+            moveToVery(initialPane: p2, command: 'paner:very-bottom')
+            ensurePaneLayout(vertical: [[e1], [e3], [e2]])
         describe "when p3 is active", ->
-          it "move to very bottom", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
+          it "move to very bottom", ->
+            moveToVery(initialPane: p3, command: 'paner:very-bottom')
+            ensurePaneLayout(vertical: [[e1], [e2], [e3]])
 
       describe "very-left", ->
-        command = 'very-left'
-        orientations = ['horizontal', 'vertical', 'vertical']
         describe "when p1 is active", ->
-          it "move to very left", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
+          it "move to very left", ->
+            moveToVery(initialPane: p1, command: 'paner:very-left')
+            ensurePaneLayout(horizontal: [[e1], {vertical: [[e2], [e3]]}])
         describe "when p2 is active", ->
-          it "move to very left", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
+          it "move to very left", ->
+            moveToVery(initialPane: p2, command: 'paner:very-left')
+            ensurePaneLayout(horizontal: [[e2], {vertical: [[e1], [e3]]}])
         describe "when p3 is active", ->
-          it "move to very left", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
+          it "move to very left", ->
+            moveToVery(initialPane: p3, command: 'paner:very-left')
+            ensurePaneLayout(horizontal: [[e3], {vertical: [[e1], [e2]]}])
 
       describe "very-right", ->
-        command = 'very-right'
-        orientations = ['horizontal', 'vertical', 'vertical']
         describe "when p1 is active", ->
-          it "move to very right", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
+          it "move to very right", ->
+            moveToVery(initialPane: p1, command: 'paner:very-right')
+            ensurePaneLayout(horizontal: [{vertical: [[e2], [e3]]}, [e1]])
         describe "when p2 is active", ->
-          it "move to very right", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
+          it "move to very right", ->
+            moveToVery(initialPane: p2, command: 'paner:very-right')
+            ensurePaneLayout(horizontal: [{vertical: [[e1], [e3]]}, [e2]])
         describe "when p3 is active", ->
-          it "move to very right", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
+          it "move to very right", ->
+            moveToVery(initialPane: p3, command: 'paner:very-right')
+            ensurePaneLayout(horizontal: [{vertical: [[e1], [e2]]}, [e3]])
