@@ -101,10 +101,10 @@ module.exports =
       'paner:split-left': => @split('left')
       'paner:split-right': => @split('right')
 
-      'paner:very-top': => @moveToVery('top')
-      'paner:very-bottom': => @moveToVery('bottom')
-      'paner:very-left': => @moveToVery('left')
-      'paner:very-right': => @moveToVery('right')
+      'paner:very-top': => @movePaneToVery('top')
+      'paner:very-bottom': => @movePaneToVery('bottom')
+      'paner:very-left': => @movePaneToVery('left')
+      'paner:very-right': => @movePaneToVery('right')
 
     @onDidPaneSplit ({oldPane, newPane, direction, options}) ->
       return unless oldEditor = oldPane.getActiveEditor()
@@ -172,7 +172,7 @@ module.exports =
       moveActivePaneItem(currentPane, dstPane)
       dstPane.activate() if activate
 
-  moveToVery: (direction) ->
+  movePaneToVery: (direction) ->
     return if atom.workspace.getPanes().length < 2
     pane = getActivePane()
     container = pane.getContainer()
