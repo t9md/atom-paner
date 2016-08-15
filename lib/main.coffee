@@ -68,14 +68,15 @@ moveAllPaneItems = (srcPane, dstPane) ->
   srcPane.moveItemToPane(item, dstPane, i) for item, i in srcPane.getItems()
   dstPane.activateItem(activeItem)
 
-mergeToParentPaneAxis = (paneAxis) ->
+reparent = (paneAxis) ->
+  debug("reparent")
   parent = paneAxis.getParent()
-  children = paneAxis.getChildren()
-  firstChild = children.shift()
-  firstChild.setFlexScale()
-  parent.replaceChild(paneAxis, firstChild)
-  while (child = children.shift())
-    parent.insertChildAfter(firstChild, child)
+  for child, i in paneAxis.getChildren()
+    if i is 0
+      parent.replaceChild(paneAxis, child)
+    else
+      parent.insertChildAfter(anchorChild, child)
+    anchorChild = child
   paneAxis.destroy()
 
 getAllPaneAxis = (paneAxis, results=[]) ->
@@ -183,7 +184,6 @@ module.exports =
     return if atom.workspace.getPanes().length < 2
     currentPane = getActivePane()
     container = currentPane.getContainer()
-    flexScale = currentPane.getFlexScale()
     root = container.getRoot()
     orientation = if direction in ['top', 'bottom'] then 'vertical' else 'horizontal'
 
@@ -191,8 +191,7 @@ module.exports =
     PaneAxis ?= root.constructor
     parent = currentPane.getParent()
     if root.getOrientation() isnt orientation
-      container.setRoot(new PaneAxis({container, orientation, children: [root], flexScale}))
-      root = container.getRoot()
+      container.setRoot(root = new PaneAxis({container, orientation, children: [root]}))
       parent.removeChild(currentPane)
     else
       parent.removeChild(currentPane, true)
@@ -202,8 +201,6 @@ module.exports =
       when 'right', 'bottom' then root.addChild(currentPane)
 
     if atom.config.get('paner.mergeSameOrientaion')
-      for axis in getAllPaneAxis(root) when isSameOrientationAsParent(axis)
-        debug("merge to parent!!")
-        mergeToParentPaneAxis(axis)
-    # root.setFlexScale(1)
+      reparent(axis) for axis in getAllPaneAxis(root) when isSameOrientationAsParent(axis)
+
     currentPane.activate()
