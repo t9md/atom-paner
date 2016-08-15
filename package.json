@@ -9,6 +9,7 @@
       "paner:swap-item",
       "paner:send-item",
       "paner:merge-item",
+      "paner:swap-pane",
       "paner:very-top",
       "paner:very-bottom",
       "paner:very-left",

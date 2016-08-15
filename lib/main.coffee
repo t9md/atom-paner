@@ -96,10 +96,13 @@ module.exports =
       'paner:merge-item': => @mergeItem(activate: true)
       'paner:send-item': => @mergeItem(activate: false)
 
-      'paner:split-up': => @split('up')
-      'paner:split-down': => @split('down')
-      'paner:split-left': => @split('left')
-      'paner:split-right': => @split('right')
+
+      'paner:split-up': => @splitPane('up')
+      'paner:split-down': => @splitPane('down')
+      'paner:split-left': => @splitPane('left')
+      'paner:split-right': => @splitPane('right')
+
+      'paner:swap-pane': => @swapPane()
 
       'paner:very-top': => @movePaneToVery('top')
       'paner:very-bottom': => @movePaneToVery('bottom')
@@ -150,7 +153,7 @@ module.exports =
     ratio = (pixelTop - editorElement.getScrollTop()) / editorElement.getHeight()
     {pixelTop, ratio}
 
-  split: (direction) ->
+  splitPane: (direction) ->
     oldPane = getActivePane()
     options = null
     if direction in ['up', 'down']
@@ -171,6 +174,24 @@ module.exports =
     if dstPane = getAdjacentPane(currentPane)
       moveActivePaneItem(currentPane, dstPane)
       dstPane.activate() if activate
+
+  swapPane: ->
+    pane = getActivePane()
+    parent = pane.getParent()
+
+    return unless children = parent.getChildren?()
+
+    index = children.indexOf(pane)
+    if index is (children.length - 1)
+      adjacentPane = children[index - 1]
+      parent.removeChild(pane, true)
+      parent.insertChildBefore(adjacentPane, pane)
+    else
+      adjacentPane = children[index + 1]
+      parent.removeChild(pane, true)
+      parent.insertChildAfter(adjacentPane, pane)
+
+    pane.activate()
 
   movePaneToVery: (direction) ->
     return if atom.workspace.getPanes().length < 2

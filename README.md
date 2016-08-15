@@ -22,6 +22,9 @@ Although this package provide several utility command, the killer feature is mov
 - `paner:very-right`: Move pane to very right position.
 - `paner:very-left`: Move pane to very left position.
 
+## Swap Pane
+- `paner:swap-pane`: Swap pane with adjacent pane.
+
 ## Pane item manipulation
 
 - `paner:swap-item`: Swap item with adjacent pane's.
@@ -67,7 +70,7 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 
 ```coffeescript
 'atom-text-editor.vim-mode-plus.normal-mode':
-  'ctrl-w x': 'paner:swap-item'
+  'ctrl-w x': 'paner:swap-pane'
   'ctrl-w X': 'paner:send-item'
   # 'ctrl-w enter': 'paner:maximize' # maximize feature is already bundled in vmp
   'ctrl-w K': 'paner:very-top'
@@ -81,7 +84,7 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 
 ```coffeescript
 'atom-workspace:not([mini])':
-  'cmd-x': 'paner:swap-item'
+  'cmd-x': 'paner:swap-pane'
   'cmd-X': 'paner:send-item'
   'cmd-K': 'paner:very-top'
   'cmd-J': 'paner:very-bottom'

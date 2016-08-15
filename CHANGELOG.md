@@ -1,3 +1,5 @@
+## 0.4.0
+- New: `paner:swap-pane` command to swap pane with adjacent pane.
 ## 0.3.0
 - No longer copy root. Once necessary but now OK to re-use existing root.
 - Refuse activePane instead of copy all item to newly created pane(once necessary).

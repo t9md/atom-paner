@@ -12,6 +12,10 @@ getVisibleBufferRowRange = (e) ->
   getView(e).getVisibleRowRange().map (row) ->
     e.bufferRowForScreenRow row
 
+splitPane = (direction) ->
+  e = atom.workspace.getActiveTextEditor()
+  atom.commands.dispatch(getView(e), "pane:split-#{direction}")
+
 addCustomMatchers = (spec) ->
   spec.addMatchers
     toHaveSampeParent: (expected) ->
@@ -183,12 +187,8 @@ describe "paner", ->
 
   describe "moveToVery direction", ->
     [p1, p2, p3] = []
-    [f1, f2, f3] = []
-    [e1, e2, e3] = []
-
-    split = (direction) ->
-      e = atom.workspace.getActiveTextEditor()
-      atom.commands.dispatch(getView(e), "pane:split-#{direction}")
+    [f1, f2, f3, f4] = []
+    [e1, e2, e3, e4] = []
 
     moveToVery = ({initialPane, command}) ->
       initialPane.activate()
@@ -211,13 +211,14 @@ describe "paner", ->
       f1 = atom.project.resolvePath("file1")
       f2 = atom.project.resolvePath("file2")
       f3 = atom.project.resolvePath("file3")
+      f4 = atom.project.resolvePath("file4")
 
     describe "all horizontal", ->
       beforeEach ->
         waitsForPromise -> atom.workspace.open(f1).then (e) -> e1 = e
-        runs -> split('right')
+        runs -> splitPane('right')
         waitsForPromise -> atom.workspace.open(f2).then (e) -> e2 = e
-        runs -> split('right')
+        runs -> splitPane('right')
         waitsForPromise -> atom.workspace.open(f3).then (e) -> e3 = e
 
         runs ->
@@ -286,9 +287,9 @@ describe "paner", ->
     describe "all vertical", ->
       beforeEach ->
         waitsForPromise -> atom.workspace.open(f1).then (e) -> e1 = e
-        runs -> split('down')
+        runs -> splitPane('down')
         waitsForPromise -> atom.workspace.open(f2).then (e) -> e2 = e
-        runs -> split('down')
+        runs -> splitPane('down')
         waitsForPromise -> atom.workspace.open(f3).then (e) -> e3 = e
 
         runs ->
@@ -353,3 +354,58 @@ describe "paner", ->
           ensurePaneLayout(vertical: [[e2], [e3], [e1]])
           dispatchCommand('paner:very-right')
           ensurePaneLayout(horizontal: [{vertical: [[e2], [e3]]}, [e1]])
+
+    describe "swapPane", ->
+      beforeEach ->
+        waitsForPromise -> atom.workspace.open(f1).then (e) -> e1 = e
+        runs -> splitPane('right')
+        waitsForPromise -> atom.workspace.open(f2).then (e) -> e2 = e
+        waitsForPromise -> atom.workspace.open(f3).then (e) -> e3 = e
+        runs -> splitPane('down')
+        waitsForPromise -> atom.workspace.open(f4).then (e) -> e4 = e
+
+        runs ->
+          panes = atom.workspace.getPanes()
+          expect(panes).toHaveLength(3)
+          [p1, p2, p3] = panes
+          ensurePaneLayout
+            horizontal: [
+              [e1]
+              vertical: [[e2, e3], [e4]]
+            ]
+          expect(atom.workspace.getActivePane()).toBe(p3)
+          expect(atom.workspace.getActiveTextEditor()).toBe(e4)
+
+      it "case 1", ->
+        dispatchCommand('paner:swap-pane')
+        ensurePaneLayout
+          horizontal: [
+            [e1]
+            vertical: [[e4], [e2, e3]]
+          ]
+        expect(atom.workspace.getActiveTextEditor()).toBe(e4)
+
+        dispatchCommand('paner:swap-pane')
+        ensurePaneLayout
+          horizontal: [
+            [e1]
+            vertical: [[e2, e3], [e4]]
+          ]
+        expect(atom.workspace.getActiveTextEditor()).toBe(e4)
+
+        p1.activate() # p1 is pane represented as [e1]
+        dispatchCommand('paner:swap-pane')
+        ensurePaneLayout
+          horizontal: [
+            vertical: [[e2, e3], [e4]]
+            [e1]
+          ]
+        expect(atom.workspace.getActiveTextEditor()).toBe(e1)
+
+        dispatchCommand('paner:swap-pane')
+        ensurePaneLayout
+          horizontal: [
+            [e1]
+            vertical: [[e2, e3], [e4]]
+          ]
+        expect(atom.workspace.getActiveTextEditor()).toBe(e1)
