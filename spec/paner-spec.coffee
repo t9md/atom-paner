@@ -223,51 +223,39 @@ describe "paner", ->
         command = 'very-top'
         orientations = ['vertical', 'horizontal', 'horizontal']
         describe "when p1 is active", ->
-          it "move to very top", ->
-            expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
+          it "move to very top", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
         describe "when p2 is active", ->
-          it "move to very top", ->
-            expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
+          it "move to very top", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
         describe "when p3 is active", ->
-          it "move to very top", ->
-            expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
+          it "move to very top", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
 
       describe "very-bottom", ->
         command = 'very-bottom'
         orientations = ['horizontal', 'horizontal', 'vertical']
         describe "when p1 is active", ->
-          it "move to very bottom", ->
-            expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
+          it "move to very bottom", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
         describe "when p2 is active", ->
-          it "move to very bottom", ->
-            expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
+          it "move to very bottom", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
         describe "when p3 is active", ->
-          it "move to very bottom", ->
-            expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
+          it "move to very bottom", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
 
       describe "very-left", ->
         command = 'very-left'
         describe "when p1 is active", ->
-          it "move to very left", ->
-            expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
+          it "move to very left", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
         describe "when p2 is active", ->
-          it "move to very left", ->
-            expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
+          it "move to very left", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
         describe "when p3 is active", ->
-          it "move to very left", ->
-            expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
+          it "move to very left", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
 
       describe "very-right", ->
         command = 'very-right'
         describe "when p1 is active", ->
-          it "move to very right", ->
-            expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
+          it "move to very right", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
         describe "when p2 is active", ->
-          it "move to very right", ->
-            expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
+          it "move to very right", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
         describe "when p3 is active", ->
-          it "move to very right", ->
-            expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
+          it "move to very right", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
 
     describe "all vertical", ->
       beforeEach ->
@@ -288,48 +276,36 @@ describe "paner", ->
       describe "very-top", ->
         command = 'very-top'
         describe "when p1 is active", ->
-          it "move to very top", ->
-            expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
+          it "move to very top", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3]})
         describe "when p2 is active", ->
-          it "move to very top", ->
-            expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
+          it "move to very top", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3]})
         describe "when p3 is active", ->
-          it "move to very top", ->
-            expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
+          it "move to very top", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2]})
       describe "very-bottom", ->
         command = 'very-bottom'
         describe "when p1 is active", ->
-          it "move to very bottom", ->
-            expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
+          it "move to very bottom", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1]})
         describe "when p2 is active", ->
-          it "move to very bottom", ->
-            expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
+          it "move to very bottom", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2]})
         describe "when p3 is active", ->
-          it "move to very bottom", ->
-            expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
+          it "move to very bottom", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3]})
 
       describe "very-left", ->
         command = 'very-left'
         orientations = ['horizontal', 'vertical', 'vertical']
         describe "when p1 is active", ->
-          it "move to very left", ->
-            expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
+          it "move to very left", -> expectPanePaths({active: p1, command, paths: [f1, f2, f3], orientations})
         describe "when p2 is active", ->
-          it "move to very left", ->
-            expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
+          it "move to very left", -> expectPanePaths({active: p2, command, paths: [f2, f1, f3], orientations})
         describe "when p3 is active", ->
-          it "move to very left", ->
-            expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
+          it "move to very left", -> expectPanePaths({active: p3, command, paths: [f3, f1, f2], orientations})
 
       describe "very-right", ->
         command = 'very-right'
         orientations = ['horizontal', 'vertical', 'vertical']
         describe "when p1 is active", ->
-          it "move to very right", ->
-            expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
+          it "move to very right", -> expectPanePaths({active: p1, command, paths: [f2, f3, f1], orientations})
         describe "when p2 is active", ->
-          it "move to very right", ->
-            expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
+          it "move to very right", -> expectPanePaths({active: p2, command, paths: [f1, f3, f2], orientations})
         describe "when p3 is active", ->
-          it "move to very right", ->
-            expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
+          it "move to very right", -> expectPanePaths({active: p3, command, paths: [f1, f2, f3], orientations})
