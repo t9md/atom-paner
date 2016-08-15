@@ -190,19 +190,6 @@ describe "paner", ->
       e = atom.workspace.getActiveTextEditor()
       atom.commands.dispatch(getView(e), "pane:split-#{direction}")
 
-    getPanePaths = ->
-      atom.workspace.getPanes().map((p) -> p.getActiveItem().getPath())
-
-    getPaneOrientations = ->
-      atom.workspace.getPanes().map((p) -> p.getParent().getOrientation())
-
-    expectPanePaths = ({active, command, paths, orientaions}) ->
-      active.activate()
-      dispatchCommand(command)
-      expect(getPanePaths()).toEqual paths
-      if orientaions?
-        expect(getPaneOrientations()).toEqual orientaions
-
     moveToVery = ({initialPane, command}) ->
       initialPane.activate()
       dispatchCommand(command)
@@ -210,14 +197,14 @@ describe "paner", ->
     ensurePaneLayout = (layout) ->
       pane = atom.workspace.getActivePane()
       root = pane.getContainer().getRoot()
-      expect(getPaneLayout(root)).toEqual(layout)
+      expect(paneLayoutFor(root)).toEqual(layout)
 
-    getPaneLayout = (root) ->
+    paneLayoutFor = (root) ->
       layout = {}
       layout[root.getOrientation()] = root.getChildren().map (child) ->
         switch child.constructor.name
           when 'Pane' then child.getItems()
-          when 'PaneAxis' then getPaneLayout(child)
+          when 'PaneAxis' then paneLayoutFor(child)
       layout
 
     beforeEach ->
@@ -241,60 +228,48 @@ describe "paner", ->
           expect(atom.workspace.getActivePane()).toBe(p3)
 
       describe "very-top", ->
-        describe "when p1 is active", ->
-          it "move to very top", ->
-            moveToVery(initialPane: p1, command: 'paner:very-top')
-            ensurePaneLayout(vertical: [[e1], {horizontal: [[e2], [e3]]}])
-        describe "when p2 is active", ->
-          it "move to very top", ->
-            moveToVery(initialPane: p2, command: 'paner:very-top')
-            ensurePaneLayout(vertical: [[e2], {horizontal: [[e1], [e3]]}])
-        describe "when p3 is active", ->
-          it "move to very top", ->
-            moveToVery(initialPane: p3, command: 'paner:very-top')
-            ensurePaneLayout(vertical: [[e3], {horizontal: [[e1], [e2]]}])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-top')
+          ensurePaneLayout(vertical: [[e1], {horizontal: [[e2], [e3]]}])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-top')
+          ensurePaneLayout(vertical: [[e2], {horizontal: [[e1], [e3]]}])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-top')
+          ensurePaneLayout(vertical: [[e3], {horizontal: [[e1], [e2]]}])
 
       describe "very-bottom", ->
-        describe "when p1 is active", ->
-          it "move to very bottom", ->
-            moveToVery(initialPane: p1, command: 'paner:very-bottom')
-            ensurePaneLayout(vertical: [{horizontal: [[e2], [e3]]}, [e1]])
-        describe "when p2 is active", ->
-          it "move to very bottom", ->
-            moveToVery(initialPane: p2, command: 'paner:very-bottom')
-            ensurePaneLayout(vertical: [{horizontal: [[e1], [e3]]}, [e2]])
-        describe "when p3 is active", ->
-          it "move to very bottom", ->
-            moveToVery(initialPane: p3, command: 'paner:very-bottom')
-            ensurePaneLayout(vertical: [{horizontal: [[e1], [e2]]}, [e3]])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-bottom')
+          ensurePaneLayout(vertical: [{horizontal: [[e2], [e3]]}, [e1]])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-bottom')
+          ensurePaneLayout(vertical: [{horizontal: [[e1], [e3]]}, [e2]])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-bottom')
+          ensurePaneLayout(vertical: [{horizontal: [[e1], [e2]]}, [e3]])
 
       describe "very-left", ->
-        describe "when p1 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p1, command: 'paner:very-left')
-            ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
-        describe "when p2 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p2, command: 'paner:very-left')
-            ensurePaneLayout(horizontal: [[e2], [e1], [e3]])
-        describe "when p3 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p3, command: 'paner:very-left')
-            ensurePaneLayout(horizontal: [[e3], [e1], [e2]])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-left')
+          ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-left')
+          ensurePaneLayout(horizontal: [[e2], [e1], [e3]])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-left')
+          ensurePaneLayout(horizontal: [[e3], [e1], [e2]])
 
       describe "very-right", ->
-        describe "when p1 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p1, command: 'paner:very-right')
-            ensurePaneLayout(horizontal: [[e2], [e3], [e1]])
-        describe "when p2 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p2, command: 'paner:very-right')
-            ensurePaneLayout(horizontal: [[e1], [e3], [e2]])
-        describe "when p3 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p3, command: 'paner:very-right')
-            ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-right')
+          ensurePaneLayout(horizontal: [[e2], [e3], [e1]])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-right')
+          ensurePaneLayout(horizontal: [[e1], [e3], [e2]])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-right')
+          ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
 
     describe "all vertical", ->
       beforeEach ->
@@ -312,57 +287,45 @@ describe "paner", ->
           expect(atom.workspace.getActivePane()).toBe(p3)
 
       describe "very-top", ->
-        describe "when p1 is active", ->
-          it "move to very top", ->
-            moveToVery(initialPane: p1, command: 'paner:very-top')
-            ensurePaneLayout(vertical: [[e1], [e2], [e3]])
-        describe "when p2 is active", ->
-          it "move to very top", ->
-            moveToVery(initialPane: p2, command: 'paner:very-top')
-            ensurePaneLayout(vertical: [[e2], [e1], [e3]])
-        describe "when p3 is active", ->
-          it "move to very top", ->
-            moveToVery(initialPane: p3, command: 'paner:very-top')
-            ensurePaneLayout(vertical: [[e3], [e1], [e2]])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-top')
+          ensurePaneLayout(vertical: [[e1], [e2], [e3]])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-top')
+          ensurePaneLayout(vertical: [[e2], [e1], [e3]])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-top')
+          ensurePaneLayout(vertical: [[e3], [e1], [e2]])
 
       describe "very-bottom", ->
-        describe "when p1 is active", ->
-          it "move to very bottom", ->
-            moveToVery(initialPane: p1, command: 'paner:very-bottom')
-            ensurePaneLayout(vertical: [[e2], [e3], [e1]])
-        describe "when p2 is active", ->
-          it "move to very bottom", ->
-            moveToVery(initialPane: p2, command: 'paner:very-bottom')
-            ensurePaneLayout(vertical: [[e1], [e3], [e2]])
-        describe "when p3 is active", ->
-          it "move to very bottom", ->
-            moveToVery(initialPane: p3, command: 'paner:very-bottom')
-            ensurePaneLayout(vertical: [[e1], [e2], [e3]])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-bottom')
+          ensurePaneLayout(vertical: [[e2], [e3], [e1]])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-bottom')
+          ensurePaneLayout(vertical: [[e1], [e3], [e2]])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-bottom')
+          ensurePaneLayout(vertical: [[e1], [e2], [e3]])
 
       describe "very-left", ->
-        describe "when p1 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p1, command: 'paner:very-left')
-            ensurePaneLayout(horizontal: [[e1], {vertical: [[e2], [e3]]}])
-        describe "when p2 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p2, command: 'paner:very-left')
-            ensurePaneLayout(horizontal: [[e2], {vertical: [[e1], [e3]]}])
-        describe "when p3 is active", ->
-          it "move to very left", ->
-            moveToVery(initialPane: p3, command: 'paner:very-left')
-            ensurePaneLayout(horizontal: [[e3], {vertical: [[e1], [e2]]}])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-left')
+          ensurePaneLayout(horizontal: [[e1], {vertical: [[e2], [e3]]}])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-left')
+          ensurePaneLayout(horizontal: [[e2], {vertical: [[e1], [e3]]}])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-left')
+          ensurePaneLayout(horizontal: [[e3], {vertical: [[e1], [e2]]}])
 
       describe "very-right", ->
-        describe "when p1 is active", ->
-          it "move to very right", ->
-            moveToVery(initialPane: p1, command: 'paner:very-right')
-            ensurePaneLayout(horizontal: [{vertical: [[e2], [e3]]}, [e1]])
-        describe "when p2 is active", ->
-          it "move to very right", ->
-            moveToVery(initialPane: p2, command: 'paner:very-right')
-            ensurePaneLayout(horizontal: [{vertical: [[e1], [e3]]}, [e2]])
-        describe "when p3 is active", ->
-          it "move to very right", ->
-            moveToVery(initialPane: p3, command: 'paner:very-right')
-            ensurePaneLayout(horizontal: [{vertical: [[e1], [e2]]}, [e3]])
+        it "case 1", ->
+          moveToVery(initialPane: p1, command: 'paner:very-right')
+          ensurePaneLayout(horizontal: [{vertical: [[e2], [e3]]}, [e1]])
+        it "case 2", ->
+          moveToVery(initialPane: p2, command: 'paner:very-right')
+          ensurePaneLayout(horizontal: [{vertical: [[e1], [e3]]}, [e2]])
+        it "case 3", ->
+          moveToVery(initialPane: p3, command: 'paner:very-right')
+          ensurePaneLayout(horizontal: [{vertical: [[e1], [e2]]}, [e3]])
