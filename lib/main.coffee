@@ -63,11 +63,6 @@ swapActiveItem = (srcPane, dstPane) ->
     srcPane.activateItem(dstItem)
   srcPane.activate()
 
-moveAllPaneItems = (srcPane, dstPane) ->
-  activeItem = srcPane.getActiveItem() # remember ActiveItem
-  srcPane.moveItemToPane(item, dstPane, i) for item, i in srcPane.getItems()
-  dstPane.activateItem(activeItem)
-
 reparent = (paneAxis) ->
   debug("reparent")
   parent = paneAxis.getParent()
@@ -75,8 +70,8 @@ reparent = (paneAxis) ->
     if i is 0
       parent.replaceChild(paneAxis, child)
     else
-      parent.insertChildAfter(anchorChild, child)
-    anchorChild = child
+      parent.insertChildAfter(anchor, child)
+    anchor = child
   paneAxis.destroy()
 
 getAllPaneAxis = (paneAxis, results=[]) ->
@@ -84,9 +79,6 @@ getAllPaneAxis = (paneAxis, results=[]) ->
     results.push(child)
     getAllPaneAxis(child, results)
   results
-
-isSameOrientationAsParent = (paneAxis) ->
-  paneAxis.getOrientation() is paneAxis.getParent().getOrientation?()
 
 PaneAxis = null
 Pane = null
@@ -182,25 +174,26 @@ module.exports =
 
   moveToVery: (direction) ->
     return if atom.workspace.getPanes().length < 2
-    currentPane = getActivePane()
-    container = currentPane.getContainer()
+    pane = getActivePane()
+    container = pane.getContainer()
     root = container.getRoot()
     orientation = if direction in ['top', 'bottom'] then 'vertical' else 'horizontal'
 
     # If there is multiple pane in window, root is always instance of PaneAxis
     PaneAxis ?= root.constructor
-    parent = currentPane.getParent()
+    parent = pane.getParent()
     if root.getOrientation() isnt orientation
       container.setRoot(root = new PaneAxis({container, orientation, children: [root]}))
-      parent.removeChild(currentPane)
+      parent.removeChild(pane)
     else
-      parent.removeChild(currentPane, true)
+      parent.removeChild(pane, true)
 
     switch direction
-      when 'top', 'left' then root.addChild(currentPane, 0)
-      when 'right', 'bottom' then root.addChild(currentPane)
+      when 'top', 'left' then root.addChild(pane, 0)
+      when 'right', 'bottom' then root.addChild(pane)
 
-    if atom.config.get('paner.mergeSameOrientaion')
-      reparent(axis) for axis in getAllPaneAxis(root) when isSameOrientationAsParent(axis)
+    for axis in getAllPaneAxis(root)
+      if axis.getOrientation() is axis.getParent().getOrientation()
+        reparent(axis)
 
-    currentPane.activate()
+    pane.activate()
