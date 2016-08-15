@@ -6,37 +6,38 @@ Missing pane manipulation utilities.
 
 # Feature
 
-* Swap pane item with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
-* Maximize: Maximize pane. Well know as **Zen mode**.
-Automatically exit Maximized mode if Active Pane changed.
-* move to VERY top/bottom/right/left: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
-* Split with synching scroll state of original pane item.
+Although this package provide several utility command, the killer feature is move-to-very-xxx command.
+
+- move to VERY top/bottom/right/left: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
+- Swap pane item with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
+- Maximize: Maximize pane. Well know as **Zen mode**. Automatically exit Maximized mode if Active Pane changed.
+- Split with synching scroll state of original pane item.
 
 # Commands
 
+## Move pane to VERY far direction
+
+- `paner:very-top`: Move pane to very top position.
+- `paner:very-bottom`: Move pane to very bottom position.
+- `paner:very-right`: Move pane to very right position.
+- `paner:very-left`: Move pane to very left position.
+
 ## Pane item manipulation
 
-* `paner:swap-item`: Swap item with adjacent pane's.
-* `paner:send-item`: Send active item to adjacent Pane.
-* `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
+- `paner:swap-item`: Swap item with adjacent pane's.
+- `paner:send-item`: Send active item to adjacent Pane.
+- `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
 
 ## Zen-mode
 
-* `paner:maximize`: Maximize or unMaximize current pane item.
-
-## Move pane to VERY far direction
-
-* `paner:very-top`: Move current pane to very top.
-* `paner:very-bottom`: Move current pane to very bottom.
-* `paner:very-right`: Move current pane to very right.
-* `paner:very-left`: Move current pane to very left.
+- `paner:maximize`: Maximize or unMaximize current pane item.
 
 ## Split with keeping scroll ratio
 
-* `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor.
-* `paner:split-down`: Keep scroll state for newly opened editor.
-* `paner:split-right`: Keep scroll state for newly opened editor.
-* `paner:split-left`: Keep scroll state for newly opened editor.
+- `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor.
+- `paner:split-down`: Keep scroll state for newly opened editor.
+- `paner:split-right`: Keep scroll state for newly opened editor.
+- `paner:split-left`: Keep scroll state for newly opened editor.
 
 # Keymap example.
 
@@ -60,15 +61,15 @@ No default keymap.
   'cmd-k right': 'paner:split-right'
 ```
 
-* [vim-mode](https://atom.io/packages/vim-mode) user.
+* [vim-mode-plus](https://atom.io/packages/vim-mode-plus) user.
 
 If you want to manipulate pane which is not instance of TextEdior(e.g. settings-view), you need to set keymap on `atom-workspace` not on `atom-text-editor`.
 
 ```coffeescript
-'atom-text-editor.vim-mode.normal-mode':
+'atom-text-editor.vim-mode-plus.normal-mode':
   'ctrl-w x': 'paner:swap-item'
   'ctrl-w X': 'paner:send-item'
-  'ctrl-w enter': 'paner:maximize'
+  # 'ctrl-w enter': 'paner:maximize' # maximize feature is already bundled in vmp
   'ctrl-w K': 'paner:very-top'
   'ctrl-w J': 'paner:very-bottom'
   'ctrl-w H': 'paner:very-left'
@@ -77,8 +78,6 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 ```
 
 * Mine.
-
-I'm [vim-mode-plus](https://atom.io/packages/vim-mode-plus) user.
 
 ```coffeescript
 'atom-workspace:not([mini])':
@@ -93,10 +92,3 @@ I'm [vim-mode-plus](https://atom.io/packages/vim-mode-plus) user.
   # Override default cmd-L(editor:split-selections-into-lines)
   'cmd-L': 'paner:very-right'
 ```
-
-# Misc
-
-From atom 0.206.0, PreviewTab feature is introduces.  
-If user enabled this feature, tab not modified or dblclicked is treated as preview, temporary tab which is replaced when opening another file.  
-This tab characteristic don't well work with paner since is move tab(pane item) from pane to pane.  
-To workaround this, paner reset preview state of tab for the pane which is subject to manipulation. See [#1](https://github.com/t9md/atom-paner/issues/1).  
