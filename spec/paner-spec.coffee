@@ -271,6 +271,18 @@ describe "paner", ->
           moveToVery(initialPane: p3, command: 'paner:very-right')
           ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
 
+      describe "complex operation", ->
+        it "case 1", ->
+          p1.activate()
+          dispatchCommand('paner:very-top')
+          ensurePaneLayout(vertical: [[e1], {horizontal: [[e2], [e3]]}])
+          dispatchCommand('paner:very-left')
+          ensurePaneLayout(horizontal: [[e1], [e2], [e3]])
+          dispatchCommand('paner:very-bottom')
+          ensurePaneLayout(vertical: [{horizontal: [[e2], [e3]]}, [e1]])
+          dispatchCommand('paner:very-right')
+          ensurePaneLayout(horizontal: [[e2], [e3], [e1]])
+
     describe "all vertical", ->
       beforeEach ->
         waitsForPromise -> atom.workspace.open(f1).then (e) -> e1 = e
@@ -329,3 +341,15 @@ describe "paner", ->
         it "case 3", ->
           moveToVery(initialPane: p3, command: 'paner:very-right')
           ensurePaneLayout(horizontal: [{vertical: [[e1], [e2]]}, [e3]])
+
+      describe "complex operation", ->
+        it "case 1", ->
+          p1.activate()
+          dispatchCommand('paner:very-top')
+          ensurePaneLayout(vertical: [[e1], [e2], [e3]])
+          dispatchCommand('paner:very-left')
+          ensurePaneLayout(horizontal: [[e1], {vertical: [[e2], [e3]]}])
+          dispatchCommand('paner:very-bottom')
+          ensurePaneLayout(vertical: [[e2], [e3], [e1]])
+          dispatchCommand('paner:very-right')
+          ensurePaneLayout(horizontal: [{vertical: [[e2], [e3]]}, [e1]])
