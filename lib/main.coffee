@@ -177,32 +177,29 @@ module.exports =
 
   swapPane: ->
     pane = getActivePane()
-    parent = pane.getParent()
-
-    return unless children = parent.getChildren?()
-
-    index = children.indexOf(pane)
-    if index is (children.length - 1)
-      adjacentPane = children[index - 1]
+    if adjacentPane = getAdjacentPane(pane)
+      parent = pane.getParent()
+      children = parent.getChildren()
       parent.removeChild(pane, true)
-      parent.insertChildBefore(adjacentPane, pane)
-    else
-      adjacentPane = children[index + 1]
-      parent.removeChild(pane, true)
-      parent.insertChildAfter(adjacentPane, pane)
-
-    pane.activate()
+      if children.indexOf(pane) < children.indexOf(adjacentPane)
+        parent.insertChildAfter(adjacentPane, pane)
+      else
+        parent.insertChildBefore(adjacentPane, pane)
+      pane.activate()
 
   movePaneToVery: (direction) ->
     return if atom.workspace.getPanes().length < 2
     pane = getActivePane()
     container = pane.getContainer()
     root = container.getRoot()
-    orientation = if direction in ['top', 'bottom'] then 'vertical' else 'horizontal'
+    orientation = switch direction
+      when 'top', 'bottom' then 'vertical'
+      when 'right', 'left' then 'horizontal'
 
     # If there is multiple pane in window, root is always instance of PaneAxis
     PaneAxis ?= root.constructor
     parent = pane.getParent()
+
     if root.getOrientation() isnt orientation
       container.setRoot(root = new PaneAxis({container, orientation, children: [root]}))
       parent.removeChild(pane)
