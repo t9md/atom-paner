@@ -66,8 +66,9 @@ swapActiveItem = (srcPane, dstPane) ->
 reparent = (paneAxis) ->
   debug("reparent")
   parent = paneAxis.getParent()
-  for child, i in paneAxis.getChildren()
-    if i is 0
+  anchor = null
+  for child in paneAxis.getChildren()
+    unless anchor?
       parent.replaceChild(paneAxis, child)
     else
       parent.insertChildAfter(anchor, child)
