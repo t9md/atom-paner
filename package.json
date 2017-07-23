@@ -25,9 +25,7 @@
   "engines": {
     "atom": ">=0.174.0 <2.0.0"
   },
-  "dependencies": {
-    "underscore-plus": "^1.6.6"
-  },
+  "dependencies": {},
   "configSchema": {
     "debug": {
       "type": "boolean",

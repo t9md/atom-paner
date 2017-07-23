@@ -1,4 +1,3 @@
-_ = require 'underscore-plus'
 {Range} = require 'atom'
 
 getView = (model) -> atom.views.getView(model)
