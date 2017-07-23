@@ -117,7 +117,7 @@ describe "paner", ->
       getView(e).setHeight(num * e.getLineHeightInPixels())
 
     onDidSplit = (fn) ->
-      main.emitter.preempt 'did-pane-split', fn
+      main.emitter.preempt 'did-split-pane', fn
 
     beforeEach ->
       pathSample = atom.project.resolvePath("sample")
