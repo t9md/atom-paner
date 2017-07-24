@@ -30,7 +30,7 @@
   "repository": "https://github.com/t9md/atom-paner",
   "license": "MIT",
   "engines": {
-    "atom": ">=0.174.0 <2.0.0"
+    "atom": "^1.18.0"
   },
   "dependencies": {},
   "configSchema": {

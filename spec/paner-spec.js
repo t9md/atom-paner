@@ -1,3 +1,5 @@
+'use babel'
+
 const {Range} = require("atom")
 const {
   it,
