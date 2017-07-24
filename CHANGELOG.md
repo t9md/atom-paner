@@ -1,4 +1,4 @@
-## 0.5.0: Restarted
+## 1.0.0: Restarted
 - Breaking:
   - This package was broken for very long time.(over 6 months).
   - Because catching up with Atom's latest change was hard for me especially for this hacky package.
