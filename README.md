@@ -1,46 +1,47 @@
 # Paner [![Build Status](https://travis-ci.org/t9md/atom-paner.svg)](https://travis-ci.org/t9md/atom-paner)
 
-Missing pane manipulation utilities.
+Missing pane manipulation utilities.  
 
-![gif](https://raw.githubusercontent.com/t9md/t9md/4407eb697d1f83a8ce6a16ce096a98a270980c3b/img/atom-paner.gif)
+- This package include several pane manipulation commands
+- But why I created this package is for `move-pane-to-very-XXX` commands.  
+- Which is equivalent feature of Vim's `ctrl-w K`, `ctrl-w J`, `ctrl-w H`, `ctrl-w L`.  
 
-# Feature
-
-Although this package provide several utility command, the killer feature is move-to-very-xxx command.
-
-- move to VERY top/bottom/right/left: Move Pane to **very** top, bottom, right, left like Vim's `ctrl-w H` and its cousin.
-- Swap pane item with adjacent pane like Vim's `ctrl-w x`. Adjacent means choose swap `target` within same PaneAxis(`horizontal` or `vertical`).
-- Maximize: Maximize pane. Well know as **Zen mode**. Automatically exit Maximized mode if Active Pane changed.
-- Split with synching scroll state of original pane item.
+![gif](https://raw.githubusercontent.com/t9md/t9md/3a96be08b9bc5661f4a7dc2154380bc08789a226/img/atom-paner.gif)
 
 # Commands
 
-## Move pane to VERY far direction
+### Move pane to far-most direction.
 
-- `paner:very-top`: Move pane to very top position.
-- `paner:very-bottom`: Move pane to very bottom position.
-- `paner:very-right`: Move pane to very right position.
-- `paner:very-left`: Move pane to very left position.
+- `paner:move-pane-to-very-top`:
+- `paner:move-pane-to-very-bottom`:
+- `paner:move-pane-to-very-left`:
+- `paner:move-pane-to-very-right`:
 
-## Swap Pane
-- `paner:swap-pane`: Swap pane with adjacent pane.
+### Move pane item to adjacent pane
 
-## Pane item manipulation
+- `paner:move-pane-item`: Adjacent pane become active.
+- `paner:move-pane-item-stay`: Doesn't change active pane.
 
-- `paner:swap-item`: Swap item with adjacent pane's.
-- `paner:send-item`: Send active item to adjacent Pane.
-- `paner:merge-item`: Same as `paner:send-item` but it activate target pane.
+### Exchange current pane with adjacent pane.
 
-## Zen-mode
+- `paner:exchange-pane`
+- `paner:exchange-pane-stay`
 
-- `paner:maximize`: Maximize or unMaximize current pane item.
+### Split with keeping scroll ratio
 
-## Split with keeping scroll ratio
+Respect original scroll ratio when open new item so that you won't loose sight of cursor.
 
-- `paner:split-up`: Keep scroll state for newly opened editor so you won't loose sight of cursor.
-- `paner:split-down`: Keep scroll state for newly opened editor.
-- `paner:split-right`: Keep scroll state for newly opened editor.
-- `paner:split-left`: Keep scroll state for newly opened editor.
+- `paner:split-pane-up`
+- `paner:split-pane-down`
+- `paner:split-pane-left`
+- `paner:split-pane-right`
+
+Doesn't activate new pane.
+
+- `paner:split-pane-up-stay`
+- `paner:split-pane-down-stay`
+- `paner:split-pane-left-stay`
+- `paner:split-pane-right-stay`
 
 # Keymap example.
 
@@ -50,18 +51,14 @@ No default keymap.
 
 ```coffeescript
 'atom-workspace:not([mini])':
-  'cmd-k x': 'paner:swap-item'
-  'cmd-k X': 'paner:send-item'
-  'cmd-enter': 'paner:maximize'
-  'cmd-k cmd-up': 'paner:very-top'
-  'cmd-k cmd-down': 'paner:very-bottom'
-  'cmd-k cmd-left': 'paner:very-left'
-  'cmd-k cmd-right': 'paner:very-right'
+  'cmd-k x': 'paner:exchange-pane'
+  'cmd-k cmd-up': 'paner:move-pane-to-very-top'
+  'cmd-k cmd-down': 'paner:move-pane-to-very-bottom'
+  'cmd-k cmd-right': 'paner:move-pane-to-very-right'
+  'cmd-k cmd-left': 'paner:move-pane-to-very-left'
 
   'cmd-k up': 'paner:split-up'
   'cmd-k down': 'paner:split-down'
-  'cmd-k left': 'paner:split-left'
-  'cmd-k right': 'paner:split-right'
 ```
 
 * [vim-mode-plus](https://atom.io/packages/vim-mode-plus) user.
@@ -70,28 +67,31 @@ If you want to manipulate pane which is not instance of TextEdior(e.g. settings-
 
 ```coffeescript
 'atom-text-editor.vim-mode-plus.normal-mode':
-  'ctrl-w x': 'paner:swap-pane'
-  'ctrl-w X': 'paner:send-item'
-  # 'ctrl-w enter': 'paner:maximize' # maximize feature is already bundled in vmp
-  'ctrl-w K': 'paner:very-top'
-  'ctrl-w J': 'paner:very-bottom'
-  'ctrl-w H': 'paner:very-left'
-  'ctrl-w L': 'paner:very-right'
-  'ctrl-w v': 'paner:split-left'
+  'ctrl-w x': 'paner:exchange-pane-stay'
+  'ctrl-w K': 'paner:move-pane-to-very-top'
+  'ctrl-w J': 'paner:move-pane-to-very-bottom'
+  'ctrl-w H': 'paner:move-pane-to-very-left'
+  'ctrl-w L': 'paner:move-pane-to-very-right'
+  'ctrl-w s': 'paner:split-pane-down-stay'
+  'ctrl-w v': 'paner:split-pane-right-stay'
 ```
 
 * Mine.
 
 ```coffeescript
 'atom-workspace:not([mini])':
-  'cmd-x': 'paner:swap-pane'
-  'cmd-X': 'paner:send-item'
-  'cmd-K': 'paner:very-top'
-  'cmd-J': 'paner:very-bottom'
-  'cmd-H': 'paner:very-left'
-  'cmd-L': 'paner:very-right'
+  'cmd-x': 'paner:exchange-pane-stay'
+  'cmd-X': 'paner:move-pane-item'
+
+  'cmd-K': 'paner:move-pane-to-very-top'
+  'cmd-J': 'paner:move-pane-to-very-bottom'
+  'cmd-H': 'paner:move-pane-to-very-left'
+  'cmd-L': 'paner:move-pane-to-very-right'
+
+  'cmd-2': 'paner:split-pane-down-stay'
+  'cmd-3': 'paner:split-pane-right-stay'
 
 'atom-text-editor.vim-mode-plus.normal-mode':
   # Override default cmd-L(editor:split-selections-into-lines)
-  'cmd-L': 'paner:very-right'
+  'cmd-L': 'paner:move-pane-to-very-right'
 ```
