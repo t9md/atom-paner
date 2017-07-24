@@ -5,29 +5,34 @@
   "description": "Pane manipulation helper",
   "activationCommands": {
     "atom-workspace": [
-      "paner:maximize",
-      "paner:swap-item",
-      "paner:send-item",
-      "paner:merge-item",
-      "paner:swap-pane",
-      "paner:very-top",
-      "paner:very-bottom",
-      "paner:very-left",
-      "paner:very-right",
-      "paner:split-up",
-      "paner:split-down",
-      "paner:split-right",
-      "paner:split-left"
+      "paner:move-pane-item",
+      "paner:move-pane-item-stay",
+
+      "paner:exchange-pane",
+      "paner:exchange-pane-stay",
+
+      "paner:split-pane-up",
+      "paner:split-pane-down",
+      "paner:split-pane-right",
+      "paner:split-pane-left",
+
+      "paner:split-pane-up-stay",
+      "paner:split-pane-down-stay",
+      "paner:split-pane-left-stay",
+      "paner:split-pane-right-stay",
+
+      "paner:move-pane-to-very-top",
+      "paner:move-pane-to-very-bottom",
+      "paner:move-pane-to-very-left",
+      "paner:move-pane-to-very-right"
     ]
   },
   "repository": "https://github.com/t9md/atom-paner",
   "license": "MIT",
   "engines": {
-    "atom": ">=0.174.0 <2.0.0"
+    "atom": "^1.18.0"
   },
-  "dependencies": {
-    "underscore-plus": "^1.6.6"
-  },
+  "dependencies": {},
   "configSchema": {
     "debug": {
       "type": "boolean",
