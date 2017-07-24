@@ -5,19 +5,21 @@
   "description": "Pane manipulation helper",
   "activationCommands": {
     "atom-workspace": [
-      "paner:send-pane-item",
+      "paner:move-pane-item",
+      "paner:move-pane-item-stay",
 
       "paner:exchange-pane",
+      "paner:exchange-pane-stay",
 
       "paner:split-pane-up",
       "paner:split-pane-down",
       "paner:split-pane-right",
       "paner:split-pane-left",
 
-      "paner:split-pane-up-keep-active-pane",
-      "paner:split-pane-down-keep-active-pane",
-      "paner:split-pane-left-keep-active-pane",
-      "paner:split-pane-right-keep-active-pane",
+      "paner:split-pane-up-stay",
+      "paner:split-pane-down-stay",
+      "paner:split-pane-left-stay",
+      "paner:split-pane-right-stay",
 
       "paner:move-pane-to-very-top",
       "paner:move-pane-to-very-bottom",

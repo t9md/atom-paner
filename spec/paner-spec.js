@@ -51,20 +51,40 @@ describe("paner", function() {
       expect(atom.workspace.getActivePane()).toBe(p1)
     })
 
-    describe("send-item", () => {
-      it("move active item to adjacent pane and don't change active pane", async () => {
-        dispatchCommand("paner:send-pane-item")
-        expect(p1.getItems()).toEqual([e2])
-        expect(p1.getActiveItem()).toBe(e2)
-        expect(p2.getItems()).toEqual([e3, e4, e1])
-        expect(p2.getActiveItem()).toBe(e1)
-        expect(atom.workspace.getActivePane()).toBe(p1)
+    describe("move-pane-item family", () => {
+      describe("move-pane-item", () => {
+        it("move active item to adjacent pane and don't change active pane", async () => {
+          dispatchCommand("paner:move-pane-item")
+          expect(p1.getItems()).toEqual([e2])
+          expect(p1.getActiveItem()).toBe(e2)
+          expect(p2.getItems()).toEqual([e3, e4, e1])
+          expect(p2.getActiveItem()).toBe(e1)
+          expect(atom.workspace.getActivePane()).toBe(p2)
 
-        dispatchCommand("paner:send-pane-item")
-        expect(p2.getItems()).toEqual([e3, e4, e1, e2])
-        expect(p2.getActiveItem()).toBe(e2)
-        expect(atom.workspace.getActivePane()).toBe(p2)
-        expect(p1.isAlive()).toBe(false)
+          dispatchCommand("paner:move-pane-item")
+          expect(p1.getItems()).toEqual([e2, e1])
+          expect(p1.getActiveItem()).toBe(e1)
+          expect(p2.getItems()).toEqual([e3, e4])
+          expect(p2.getActiveItem()).toBe(e4)
+          expect(atom.workspace.getActivePane()).toBe(p1)
+        })
+      })
+
+      describe("move-pane-item-stay", () => {
+        it("move active item to adjacent pane and don't change active pane", async () => {
+          dispatchCommand("paner:move-pane-item-stay")
+          expect(p1.getItems()).toEqual([e2])
+          expect(p1.getActiveItem()).toBe(e2)
+          expect(p2.getItems()).toEqual([e3, e4, e1])
+          expect(p2.getActiveItem()).toBe(e1)
+          expect(atom.workspace.getActivePane()).toBe(p1)
+
+          dispatchCommand("paner:move-pane-item-stay")
+          expect(p2.getItems()).toEqual([e3, e4, e1, e2])
+          expect(p2.getActiveItem()).toBe(e2)
+          expect(atom.workspace.getActivePane()).toBe(p2)
+          expect(p1.isAlive()).toBe(false)
+        })
       })
     })
   })
@@ -383,7 +403,7 @@ describe("paner", function() {
         }))
     })
 
-    describe("exchange-pane", function() {
+    describe("exchange-pane family", function() {
       let p1, p2, p3, items
       beforeEach(async () => {
         const e1 = await atom.workspace.open("file1")
@@ -393,7 +413,6 @@ describe("paner", function() {
         const panes = atom.workspace.getCenter().getPanes()
         expect(panes).toHaveLength(3)
         ;[p1, p2, p3] = panes
-        // ;[p1i, p2i, p3i] = [p1.getItems(), p2.getItems(), p3.getItems()]
         items = {
           p1: p1.getItems(),
           p2: p2.getItems(),
@@ -404,27 +423,51 @@ describe("paner", function() {
           p2: [e2, e3],
           p3: [e4],
         })
+
         ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
         expect(atom.workspace.getActivePane()).toBe(p3)
       })
 
-      it("case 1", () => {
-        dispatchCommand("paner:exchange-pane")
-        ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p3, items.p2]}]})
-        expect(atom.workspace.getActivePane()).toBe(p3)
+      describe("exchange-pane", () => {
+        it("[adjacent is pane]: exchange pane, follow active pane", () => {
+          dispatchCommand("paner:exchange-pane")
+          ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p3, items.p2]}]})
+          expect(atom.workspace.getActivePane()).toBe(p3)
 
-        dispatchCommand("paner:exchange-pane")
-        ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
-        expect(atom.workspace.getActivePane()).toBe(p3)
+          dispatchCommand("paner:exchange-pane")
+          ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
+          expect(atom.workspace.getActivePane()).toBe(p3)
+        })
 
-        p1.activate()
-        dispatchCommand("paner:exchange-pane")
-        ensurePaneLayout({horizontal: [{vertical: [items.p2, items.p3]}, items.p1]})
-        expect(atom.workspace.getActivePane()).toBe(p1)
+        it("[adjacent is paneAxis]: exchange pane, when follow active pane", () => {
+          p1.activate()
+          dispatchCommand("paner:exchange-pane")
+          ensurePaneLayout({horizontal: [{vertical: [items.p2, items.p3]}, items.p1]})
+          expect(atom.workspace.getActivePane()).toBe(p1)
 
-        dispatchCommand("paner:exchange-pane")
-        ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
-        expect(atom.workspace.getActivePane()).toBe(p1)
+          dispatchCommand("paner:exchange-pane")
+          ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
+          expect(atom.workspace.getActivePane()).toBe(p1)
+        })
+      })
+
+      describe("exchange-pane-stay", () => {
+        it("[adjacent is pane]: exchange pane and and stay active pane", () => {
+          dispatchCommand("paner:exchange-pane-stay")
+          ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p3, items.p2]}]})
+          expect(atom.workspace.getActivePane()).toBe(p2)
+
+          dispatchCommand("paner:exchange-pane-stay")
+          ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
+          expect(atom.workspace.getActivePane()).toBe(p3)
+        })
+
+        it("[adjacent is paneAxis]: Do nothing when adjacent was paneAxis", () => {
+          p1.activate()
+          dispatchCommand("paner:exchange-pane-stay")
+          ensurePaneLayout({horizontal: [items.p1, {vertical: [items.p2, items.p3]}]})
+          expect(atom.workspace.getActivePane()).toBe(p1)
+        })
       })
     })
   })
