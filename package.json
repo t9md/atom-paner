@@ -1,26 +1,22 @@
 {
   "name": "paner",
   "main": "./lib/main",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "Pane manipulation helper",
   "activationCommands": {
     "atom-workspace": [
       "paner:move-pane-item",
       "paner:move-pane-item-stay",
-
       "paner:exchange-pane",
       "paner:exchange-pane-stay",
-
       "paner:split-pane-up",
       "paner:split-pane-down",
       "paner:split-pane-right",
       "paner:split-pane-left",
-
       "paner:split-pane-up-stay",
       "paner:split-pane-down-stay",
       "paner:split-pane-left-stay",
       "paner:split-pane-right-stay",
-
       "paner:move-pane-to-very-top",
       "paner:move-pane-to-very-bottom",
       "paner:move-pane-to-very-left",
